@@ -1,0 +1,50 @@
+<?php
+
+namespace App\Repository;
+
+use App\Entity\Rcr;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Common\Persistence\ManagerRegistry;
+
+/**
+ * @method Rcr|null find($id, $lockMode = null, $lockVersion = null)
+ * @method Rcr|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Rcr[]    findAll()
+ * @method Rcr[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ */
+class RcrRepository extends ServiceEntityRepository
+{
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, Rcr::class);
+    }
+
+    // /**
+    //  * @return Rcr[] Returns an array of Rcr objects
+    //  */
+    /*
+    public function findByExampleField($value)
+    {
+        return $this->createQueryBuilder('r')
+            ->andWhere('r.exampleField = :val')
+            ->setParameter('val', $value)
+            ->orderBy('r.id', 'ASC')
+            ->setMaxResults(10)
+            ->getQuery()
+            ->getResult()
+        ;
+    }
+    */
+
+    /*
+    public function findOneBySomeField($value): ?Rcr
+    {
+        return $this->createQueryBuilder('r')
+            ->andWhere('r.exampleField = :val')
+            ->setParameter('val', $value)
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
+    }
+    */
+}
