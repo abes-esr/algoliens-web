@@ -31,6 +31,12 @@ class Rcr
      */
     private $updated;
 
+    /**
+     * @ORM\ManyToOne(targetEntity="App\Entity\Iln", inversedBy="rcrs")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $iln;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -68,6 +74,18 @@ class Rcr
     public function setUpdated(\DateTimeInterface $updated): self
     {
         $this->updated = $updated;
+
+        return $this;
+    }
+
+    public function getIln(): ?Iln
+    {
+        return $this->iln;
+    }
+
+    public function setIln(?Iln $iln): self
+    {
+        $this->iln = $iln;
 
         return $this;
     }
