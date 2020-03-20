@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Iln;
 use App\Entity\Rcr;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Persistence\ManagerRegistry;
@@ -19,6 +20,9 @@ class RcrRepository extends ServiceEntityRepository
         parent::__construct($registry, Rcr::class);
     }
 
+    public function findByIln(Iln $iln) {
+        return $this->findBy(['iln' => $iln], array('label' => 'ASC'));
+    }
     // /**
     //  * @return Rcr[] Returns an array of Rcr objects
     //  */

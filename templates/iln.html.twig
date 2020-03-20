@@ -1,0 +1,9 @@
+{% extends "base.html.twig" %}
+{% block body %}
+    <h1>{{  iln.label }}</h1>
+    <ul>
+    {% for rcr in rcrs %}
+        <li><a href="{{  url('view_rcr', {ilnCode: iln.code, rcrCode: rcr.code}) }}">{{ rcr.label }}</a> &dash; {{ rcr.code }}</li>
+    {% endfor %}
+    </ul>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "base.html.twig" %}
+{% block body %}
+    <h1>{{ iln.label }} &gt; {{ rcr.label }}</h1>
+    <div>
+        <ul>
+            <li>Notice n°<a href="http://www.sudoc.fr/{{ error.ppn }}">{{ error.ppn }}</a></li>
+            <li>Type de document : {{ error.typeDocLabel }}</li>
+            <li>Type d'erreur : {{ error.textError }}</li>
+        </ul>
+    </div>
+    <hr/>
+    <button>Correction effectuée</button>&nbsp;&mdash;&nbsp;<button>Voir une autre erreur</button>
+{% endblock %}

@@ -1,4 +1,9 @@
 {% extends "base.html.twig" %}
 {% block body %}
-eeee
+    Choisir votre ILN :
+    <ul>
+    {% for iln in ilns %}
+        <li>{{ iln.code }} &mdash; <a href="{{ url("view_iln", {"code": iln.code}) }}">{{  iln.label }}</a></li>
+    {% endfor %}
+    </ul>
 {% endblock %}

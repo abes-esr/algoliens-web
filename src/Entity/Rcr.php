@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -36,6 +38,16 @@ class Rcr
      * @ORM\JoinColumn(nullable=false)
      */
     private $iln;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\LinkError", mappedBy="rcrCreate")
+     */
+    private $linkErrors;
+
+    public function __construct()
+    {
+        $this->linkErrors = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -86,6 +98,37 @@ class Rcr
     public function setIln(?Iln $iln): self
     {
         $this->iln = $iln;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|LinkError[]
+     */
+    public function getLinkErrors(): Collection
+    {
+        return $this->linkErrors;
+    }
+
+    public function addLinkError(LinkError $linkError): self
+    {
+        if (!$this->linkErrors->contains($linkError)) {
+            $this->linkErrors[] = $linkError;
+            $linkError->setRcrCreate($this);
+        }
+
+        return $this;
+    }
+
+    public function removeLinkError(LinkError $linkError): self
+    {
+        if ($this->linkErrors->contains($linkError)) {
+            $this->linkErrors->removeElement($linkError);
+            // set the owning side to null (unless already changed)
+            if ($linkError->getRcrCreate() === $this) {
+                $linkError->setRcrCreate(null);
+            }
+        }
 
         return $this;
     }
