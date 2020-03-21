@@ -5,7 +5,9 @@ namespace App\Command;
 use App\Entity\Iln;
 use App\Entity\LinkError;
 use App\Entity\Rcr;
+use App\Entity\Record;
 use Doctrine\ORM\EntityManagerInterface;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -53,7 +55,7 @@ class PopulareRcrErrorsCommand extends Command
         $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
 
         foreach ($rcrs as $rcr) {
-            $url = sprintf("https://www.idref.fr/AlgoLiens?rcr=%s&rownum=200", $rcr->getCode());
+            $url = sprintf("https://www.idref.fr/AlgoLiens?rcr=%s&rownum=100000&paprika=1", $rcr->getCode());
             $content = file_get_contents($url);
 
             $lines = preg_split("/\n/", $content);
@@ -65,17 +67,32 @@ class PopulareRcrErrorsCommand extends Command
                 $io->writeln($count);
                 $error = preg_split("/\t/", $line);
                 if (sizeof($error) > 1) {
-                    $errorObject = new LinkError();
-                    $errorObject->setPpn($error[0]);
-                    $errorObject->setIlnCreate($iln);
-                    $errorObject->setRcrCreate($rcr);
-                    $errorObject->setRcrUpdate($this->em->getRepository(Rcr::class)->findOneBy(["code" => $error[2]]));
-                    $errorObject->setTextError($error[3]);
-                    $errorObject->setDateUpdate(new \DateTime($error[4]));
-                    $errorObject->setCodeError($error[5]);
-                    $errorObject->setTypeDoc($error[6]);
-                    $errorObject->setTypeDocLabel($error[7]);
+                    $ppn = trim($error[0]);
+                    $record = $this->em->getRepository(Record::class)->findOneBy(["ppn" => $ppn]);
+                    if (!$record) {
+                        $record = new Record();
+                        $record->setPpn($ppn);
+                        $record->setRcrCreate($rcr);
 
+                        $date = trim($error[4]);
+                        $date = \DateTime::createFromFormat('Y-m-j H:i:s', $date );
+                        $record->setLastUpdate($date);
+                        $record->setStatus(0);
+                        $record->setDocTypeCode($error[6]);
+                        $record->setDocTypeLabel($error[7]);
+
+                        $this->em->persist($record);
+                        $this->em->flush();
+                    }
+
+                    $errorObject = new LinkError();
+                    $errorObject->setErrorText($error[3]);
+                    $errorObject->setErrorCode($error[5]);
+                    $paprikaLink = $error[8];
+                    if ($paprikaLink ) {
+                        $errorObject->setPaprika($paprikaLink);
+                    }
+                    $errorObject->setRecord($record);
                     $this->em->persist($errorObject);
                     $count++;
                 }

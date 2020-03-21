@@ -3,7 +3,6 @@
 namespace App\Repository;
 
 use App\Entity\LinkError;
-use App\Entity\Rcr;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Persistence\ManagerRegistry;
 
@@ -18,28 +17,6 @@ class LinkErrorRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, LinkError::class);
-    }
-
-    public function findOneRandom(Rcr $rcr) {
-        // $rows = $em->createQuery('SELECT COUNT(u.id) FROM AcmeUserBundle:User u')->getSingleScalarResult();
-        $start = microtime(true);
-        $countResults = $this->createQueryBuilder('l')
-            ->select("COUNT(l)")
-            ->where("l.status = 0 and l.rcrCreate = :rcrId")
-            ->setParameter('rcrId', $rcr)
-            ->getQuery()
-            ->getSingleScalarResult();
-
-        $offset = rand(0, $countResults);
-
-        $result = $this->createQueryBuilder('l')
-            ->where("l.status = 0 and l.rcrCreate = :rcrId")
-            ->setParameter('rcrId', $rcr)
-            ->getQuery()
-            ->setFirstResult($offset)
-            ->setMaxResults(1)
-            ->getResult();
-        return $result[0];
     }
 
     // /**

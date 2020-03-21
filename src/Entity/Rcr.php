@@ -40,13 +40,13 @@ class Rcr
     private $iln;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Entity\LinkError", mappedBy="rcrCreate")
+     * @ORM\OneToMany(targetEntity="App\Entity\Record", mappedBy="rcrCreate")
      */
-    private $linkErrors;
+    private $records;
 
     public function __construct()
     {
-        $this->linkErrors = new ArrayCollection();
+        $this->records = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -103,30 +103,34 @@ class Rcr
     }
 
     /**
-     * @return Collection|LinkError[]
+     * @return Collection|Record[]
      */
-    public function getLinkErrors(): Collection
+    public function getRecords(): Collection
     {
-        return $this->linkErrors;
+        return $this->records;
     }
 
-    public function addLinkError(LinkError $linkError): self
+    public function getNumberOfRecords(): int
     {
-        if (!$this->linkErrors->contains($linkError)) {
-            $this->linkErrors[] = $linkError;
-            $linkError->setRcrCreate($this);
+        return sizeof($this->getRecords());
+    }
+    public function addRecord(Record $record): self
+    {
+        if (!$this->records->contains($record)) {
+            $this->records[] = $record;
+            $record->setRcrCreate($this);
         }
 
         return $this;
     }
 
-    public function removeLinkError(LinkError $linkError): self
+    public function removeRecord(Record $record): self
     {
-        if ($this->linkErrors->contains($linkError)) {
-            $this->linkErrors->removeElement($linkError);
+        if ($this->records->contains($record)) {
+            $this->records->removeElement($record);
             // set the owning side to null (unless already changed)
-            if ($linkError->getRcrCreate() === $this) {
-                $linkError->setRcrCreate(null);
+            if ($record->getRcrCreate() === $this) {
+                $record->setRcrCreate(null);
             }
         }
 

@@ -1,0 +1,188 @@
+<?php
+
+namespace App\Entity;
+
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * @ORM\Entity(repositoryClass="App\Repository\RecordRepository")
+ */
+class Record
+{
+    /**
+     * @ORM\Id()
+     * @ORM\GeneratedValue()
+     * @ORM\Column(type="integer")
+     */
+    private $id;
+
+    /**
+     * @ORM\Column(type="string", length=9)
+     */
+    private $ppn;
+
+    /**
+     * @ORM\Column(type="smallint", options={"default": 0})
+     */
+    private $status;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\LinkError", mappedBy="record")
+     */
+    private $linkErrors;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="App\Entity\Rcr", inversedBy="records")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $rcrCreate;
+
+    /**
+     * @ORM\Column(type="date")
+     */
+    private $lastUpdate;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $locked;
+
+    /**
+     * @ORM\Column(type="string", length=5)
+     */
+    private $docTypeCode;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $docTypeLabel;
+
+    public function __construct()
+    {
+        $this->linkErrors = new ArrayCollection();
+    }
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getPpn(): ?string
+    {
+        return $this->ppn;
+    }
+
+    public function setPpn(string $ppn): self
+    {
+        $this->ppn = $ppn;
+
+        return $this;
+    }
+
+    public function getStatus(): ?int
+    {
+        return $this->status;
+    }
+
+    public function setStatus(int $status): self
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|LinkError[]
+     */
+    public function getLinkErrors(): Collection
+    {
+        return $this->linkErrors;
+    }
+
+    public function addLinkError(LinkError $linkError): self
+    {
+        if (!$this->linkErrors->contains($linkError)) {
+            $this->linkErrors[] = $linkError;
+            $linkError->setRecord($this);
+        }
+
+        return $this;
+    }
+
+    public function removeLinkError(LinkError $linkError): self
+    {
+        if ($this->linkErrors->contains($linkError)) {
+            $this->linkErrors->removeElement($linkError);
+            // set the owning side to null (unless already changed)
+            if ($linkError->getRecord() === $this) {
+                $linkError->setRecord(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getRcrCreate(): ?Rcr
+    {
+        return $this->rcrCreate;
+    }
+
+    public function setRcrCreate(?Rcr $rcrCreate): self
+    {
+        $this->rcrCreate = $rcrCreate;
+
+        return $this;
+    }
+
+    public function getLastUpdate(): ?\DateTimeInterface
+    {
+        return $this->lastUpdate;
+    }
+
+    public function setLastUpdate(\DateTimeInterface $lastUpdate): self
+    {
+        $this->lastUpdate = $lastUpdate;
+
+        return $this;
+    }
+
+    public function getLocked(): ?\DateTimeInterface
+    {
+        return $this->locked;
+    }
+
+    public function setLocked(): self
+    {
+        $endOfLock = new \DateTime();
+        $endOfLock = $endOfLock->modify("+1 hour");
+        $this->locked = $endOfLock;
+
+        return $this;
+    }
+
+    public function getDocTypeCode(): ?string
+    {
+        return $this->docTypeCode;
+    }
+
+    public function setDocTypeCode(string $docTypeCode): self
+    {
+        $this->docTypeCode = $docTypeCode;
+
+        return $this;
+    }
+
+    public function getDocTypeLabel(): ?string
+    {
+        return $this->docTypeLabel;
+    }
+
+    public function setDocTypeLabel(string $docTypeLabel): self
+    {
+        $this->docTypeLabel = $docTypeLabel;
+
+        return $this;
+    }
+}

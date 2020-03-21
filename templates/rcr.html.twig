@@ -2,12 +2,20 @@
 {% block body %}
     <h1>{{ iln.label }} &gt; {{ rcr.label }}</h1>
     <div>
+        Notice n°<a href="http://www.sudoc.fr/{{ record.ppn }}">{{ record.ppn }}</a> (verrouillée jusqu'à {{ record.locked.format("H:i") }})
+    </div>
+    <div>
+        <h2>Erreurs trouvées : </h2>
         <ul>
-            <li>Notice n°<a href="http://www.sudoc.fr/{{ error.ppn }}">{{ error.ppn }}</a></li>
-            <li>Type de document : {{ error.typeDocLabel }}</li>
-            <li>Type d'erreur : {{ error.textError }}</li>
+            {% for linkError in record.linkErrors %}
+                <li>
+                    {{ linkError.errorCode }} - {{ linkError.errorText}}
+                    {% if linkError.paprika %}
+                        (voir <a href="{{ linkError.paprika }}">sur Paprika</a>)
+                    {% endif %}
+                </li>
+            {% endfor %}
         </ul>
     </div>
     <hr/>
-    <button>Correction effectuée</button>&nbsp;&mdash;&nbsp;<button>Voir une autre erreur</button>
 {% endblock %}

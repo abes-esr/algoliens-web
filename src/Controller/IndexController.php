@@ -5,6 +5,8 @@ namespace App\Controller;
 use App\Entity\Iln;
 use App\Entity\LinkError;
 use App\Entity\Rcr;
+use App\Entity\Record;
+use Doctrine\ORM\EntityManagerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
@@ -40,15 +42,19 @@ class IndexController extends AbstractController
      * @Entity("iln", expr="repository.findOneBy({'code': ilnCode})")
      * @Entity("rcr", expr="repository.findOneBy({'code': rcrCode})")
      */
-    public function rcrView(Iln $iln, Rcr $rcr)
+    public function rcrView(Iln $iln, Rcr $rcr, EntityManagerInterface $em)
     {
-        $error = $this->getDoctrine()->getRepository(LinkError::class)->findOneRandom($rcr);
+        $record = $this->getDoctrine()->getRepository(Record::class)->findOneRandom($rcr);
+        $record->setLocked();
+
+        $em->persist($record);
+        $em->flush();
+
         return $this->render("rcr.html.twig",
             [
                 "iln" => $iln,
                 "rcr" => $rcr,
-                "error" => $error
-
+                "record" => $record
             ]
         );
     }
