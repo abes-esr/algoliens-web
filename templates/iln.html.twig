@@ -1,17 +1,19 @@
 {% extends "base.html.twig" %}
 {% block body %}
     <h1>{{  iln.label }}</h1>
-    <table>
+    <table class="table">
         <tr>
            <th>RCR</th>
            <th>Libellé</th>
-           <th>Nombre de notices</th>
+            <th>Nombre de notices</th>
+            <th>Nombre de notices corrigées</th>
         </tr>
     {% for rcr in rcrs %}
         <tr>
            <td>{{ rcr.code }}</td>
             <td><a href="{{  url('view_rcr', {ilnCode: iln.code, rcrCode: rcr.code}) }}">{{ rcr.label }}</a></td>
             <td>{{ rcr.numberOfRecords }}</td>
+            <td>{{ rcr.numberOfRecordsCorrected }}</td>
         </tr>
     {% endfor %}
     </table>

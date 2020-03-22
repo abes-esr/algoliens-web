@@ -29,7 +29,7 @@ class RecordRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
 
         $offset = rand(0, $countResults);
-        print "Count results : ".$countResults."<br/>";
+
         $result = $this->createQueryBuilder('l')
             ->where("l.locked is null and l.status = 0 and l.rcrCreate = :rcr")
             ->setParameter('rcr', $rcr)
@@ -37,8 +37,28 @@ class RecordRepository extends ServiceEntityRepository
             ->setFirstResult($offset)
             ->setMaxResults(1)
             ->getResult();
+        if (sizeof($result) == 0) {
+            return null;
+        }
         return $result[0];
     }
+
+    public function unlockRecords() {
+        $em = $this->getEntityManager();
+        $em->getConnection()->exec("UPDATE `record` set locked = null where locked is not null AND TIMEDIFF(now(), locked) > \"00:00:00\"");
+    }
+
+    public function countCorrectedForRcr(Rcr $rcr) {
+        $countResults = $this->createQueryBuilder('l')
+            ->select("COUNT(l)")
+            ->where("l.status = 1 and l.rcrCreate = :rcr")
+            ->setParameter('rcr', $rcr)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return $countResults;
+    }
+
 
     // /**
     //  * @return Record[] Returns an array of Record objects

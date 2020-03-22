@@ -37,6 +37,9 @@ class PopulareRcrErrorsCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+
+        print "Vérifier commande de mise à jour des nombres !";
+        exit;
         $io = new SymfonyStyle($input, $output);
         $arg1 = $input->getArgument('arg1');
         $ilnNumber = $input->getArgument('arg1');

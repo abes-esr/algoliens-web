@@ -44,9 +44,24 @@ class Rcr
      */
     private $records;
 
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $numberOfRecords;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true, options={"default": 0})
+     */
+    private $numberOfRecordsCorrected;
+
     public function __construct()
     {
         $this->records = new ArrayCollection();
+    }
+
+    public function __toString()
+    {
+        return $this->getLabel();
     }
 
     public function getId(): ?int
@@ -110,10 +125,6 @@ class Rcr
         return $this->records;
     }
 
-    public function getNumberOfRecords(): int
-    {
-        return sizeof($this->getRecords());
-    }
     public function addRecord(Record $record): self
     {
         if (!$this->records->contains($record)) {
@@ -133,6 +144,30 @@ class Rcr
                 $record->setRcrCreate(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getNumberOfRecords(): ?int
+    {
+        return $this->numberOfRecords;
+    }
+
+    public function setNumberOfRecords(?int $numberOfRecords): self
+    {
+        $this->numberOfRecords = $numberOfRecords;
+
+        return $this;
+    }
+
+    public function getNumberOfRecordsCorrected(): ?int
+    {
+        return $this->numberOfRecordsCorrected;
+    }
+
+    public function setNumberOfRecordsCorrected(?int $numberOfRecordsCorrected): self
+    {
+        $this->numberOfRecordsCorrected = $numberOfRecordsCorrected;
 
         return $this;
     }

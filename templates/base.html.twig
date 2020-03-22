@@ -2,13 +2,21 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
+        <title>{% block title %}Algoliens web{% endblock %}</title>
+        {{ encore_entry_link_tags('app') }}
         {% block stylesheets %}{% endblock %}
     </head>
-    <body>
-        {% block body %}{% endblock %}
-        {% block javascripts %}{% endblock %}
-    <hr/>
-        <a href="{{ url("home") }}">Accueil</a>
+    <body class="d-flex flex-column h-100">
+        <div class="container">
+            {% for label, messages in app.flashes() %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ label }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+            {% block body %}{% endblock %}
+            {% block javascripts %}{% endblock %}
+            <hr/>
+            <a href="{{ url("home") }}">Accueil</a>
+        </div>
     </body>
 </html>
