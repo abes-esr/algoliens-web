@@ -1,4 +1,15 @@
 {% extends "base.html.twig" %}
+{% block javascripts %}
+    <script type="text/javascript">
+        var url_raw_record = "{{ url("raw_record", {'ppn': record.ppn}) }}";
+    </script>
+    {{ encore_entry_script_tags('app') }}
+    {{ encore_entry_script_tags('record_view') }}
+    <!-- Renders app.js & a webpack runtime.js file
+        <script src="/build/runtime.js"></script>
+        <script src="/build/app.js"></script> -->
+{% endblock %}
+
 {% block body %}
     <h1>{{ iln.label }}<br/> &rarr; {{ rcr.label }}</h1>
     {% if empty %}
@@ -27,6 +38,13 @@
                     </li>
                 {% endfor %}
             </ul>
+        </div>
+
+        <div>
+            <h2>Notice unimarc</h2>
+            <div id="sudoc_record">
+                <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+            </div>
         </div>
 
         {{ form_start(form) }}

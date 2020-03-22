@@ -12,6 +12,7 @@ use function PHPSTORM_META\type;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -42,17 +43,21 @@ class IndexController extends AbstractController
     }
 
     /**
-     * @Route("/iln/{ilnCode}/rcr/{rcrCode}", name="view_rcr")
+     * @Route("/iln/{ilnCode}/rcr/{rcrCode}/{ppn?}", name="view_rcr")
      * @Entity("iln", expr="repository.findOneBy({'code': ilnCode})")
      * @Entity("rcr", expr="repository.findOneBy({'code': rcrCode})")
      */
-    public function rcrView(Iln $iln, Rcr $rcr, EntityManagerInterface $em, Request $request)
+    public function rcrView(Iln $iln, Rcr $rcr, ?string $ppn, EntityManagerInterface $em, Request $request)
     {
-        $session = new Session();
-
         // On va unlocked les notices qui doivent l'être :
         $this->getDoctrine()->getRepository(Record::class)->unlockRecords();
-        $record = $this->getDoctrine()->getRepository(Record::class)->findOneRandom($rcr);
+        if (is_null($ppn)) {
+            $record = $this->getDoctrine()->getRepository(Record::class)->findOneRandom($rcr);
+        } else {
+            $record = $this->getDoctrine()->getRepository(Record::class)->findOneBy(["ppn" => $ppn]);
+        }
+
+
         if (!$record) {
             return $this->render("rcr.html.twig",
                 [
@@ -99,7 +104,28 @@ class IndexController extends AbstractController
         );
     }
 
+    /**
+     * @Route("/rawrecord/{ppn}", name="raw_record")
+     */
+    public function rawRecord(string $ppn)
+    {
+        $xml = file_get_contents("http://www.sudoc.fr/".$ppn.".xml");
+        $record = new \SimpleXMLElement($xml);
+        $output = "";
+        foreach ($record->datafield as $datafield) {
+            $tag = (string) $datafield->attributes()["tag"][0];
+            $output .= $tag." ";
+            foreach ($datafield->subfield as $subfield) {
+                $code = (string) $subfield->attributes()["code"][0];
+                $value = (string) $subfield;
 
+                $output .= "$$code $value ";
+            }
+            $output .= "\n";
+        }
+
+        return new Response("<pre>$output</pre>");
+    }
 
 
 }

@@ -14,9 +14,13 @@
                 {% endfor %}
             {% endfor %}
             {% block body %}{% endblock %}
-            {% block javascripts %}{% endblock %}
             <hr/>
             <a href="{{ url("home") }}">Accueil</a>
         </div>
+        {% block javascripts %}
+            <!-- Renders app.js & a webpack runtime.js file
+                <script src="/build/runtime.js"></script>
+                <script src="/build/app.js"></script> -->
+        {% endblock %}
     </body>
 </html>
