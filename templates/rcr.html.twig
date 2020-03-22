@@ -3,7 +3,6 @@
     <script type="text/javascript">
         var url_raw_record = "{{ url("raw_record", {'ppn': record.ppn}) }}";
     </script>
-    {{ encore_entry_script_tags('app') }}
     {{ encore_entry_script_tags('record_view') }}
     <!-- Renders app.js & a webpack runtime.js file
         <script src="/build/runtime.js"></script>
