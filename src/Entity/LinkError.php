@@ -80,7 +80,7 @@ class LinkError
 
     public function getPaprika(): ?string
     {
-        return $this->paprika;
+        return trim($this->paprika);
     }
 
     public function setPaprika(?string $paprika): self

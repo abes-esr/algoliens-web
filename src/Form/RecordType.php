@@ -24,7 +24,7 @@ class RecordType extends AbstractType
             //->add('rcrCreate')
             ->add("validate", SubmitType::class,
                 [
-                    'label' => "Notice corrigée !",
+                    'label' => "Notice corrigée via WinibW ou Paprika !",
                     "attr" => [
                         "class" => "btn btn-success"
                     ]

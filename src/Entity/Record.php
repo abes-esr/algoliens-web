@@ -30,6 +30,7 @@ class Record
 
     /**
      * @ORM\OneToMany(targetEntity="App\Entity\LinkError", mappedBy="record")
+     * @ORM\OrderBy({"errorCode" = "ASC"})
      */
     private $linkErrors;
 

@@ -10,28 +10,24 @@
 {% endblock %}
 
 {% block body %}
-    <h1>{{ iln.label }}<br/> &rarr; {{ rcr.label }}</h1>
+    <h1 id="h1iln">{{ iln.label }}</h1>
+    <h1 id="h1rcr">{{ rcr.label }}</h1>
     {% if empty %}
         <div>
             Plus aucune notice à traiter pour ce RCR !<br/>
             Peut-être un <a href="{{ url('view_iln', {'code': iln.code}) }}">autre RCR de cet ILN</a> ?
         </div>
     {% else %}
-        <hr/>
-        <h2>Notice n°<a href="http://www.sudoc.fr/{{ record.ppn }}">{{ record.ppn }}</a> (<a href="http://www.sudoc.fr/{{ record.ppn }}.xml">voir le XML</a>)</h2>
-        <div>
 
-            <div class="alert alert-secondary">
-                Cette notice est verrouillée jusqu'à {{ record.locked.format("H:i") }}, ce qui signifie qu'elle ne sera pas proposée à quelqu'un d'autre pour correction pour le moment. Si à {{ record.locked.format("H:i") }} vous n'avez cliqué sur aucun des liens en bas de cette notice (<i>notice corrigée</i> ou <i>je passe mon tour</i>), la notice sera considérée comme "libérée".
-            </div>
-        </div>
+        <h1 id="h1ppn">Notice n°<a href="http://www.sudoc.fr/{{ record.ppn }}">{{ record.ppn }}</a></h1>
+        <hr/>
         <div>
-            <h2>Erreurs trouvées : </h2>
+            <h2>Erreurs trouvées</h2>
             <ul>
                 {% for linkError in record.linkErrors %}
                     <li>
                         {{ linkError.errorCode }} - {{ linkError.errorText}}
-                        {% if linkError.paprika %}
+                        {% if linkError.paprika != ''%}
                             (voir <a href="{{ linkError.paprika }}">sur Paprika</a>)
                         {% endif %}
                     </li>
@@ -40,13 +36,26 @@
         </div>
 
         {{ form_start(form) }}
+        <h2>Action menée sur la notice</h2>
         <div class="row">
+
             <div class="col-sm text-right">
-                {{ form_row(form.validate) }}
+                {{ form_widget(form.validate) }}
+                <p>
+                    <small>
+                        Plus la peine de la proposer aux collègues
+                    </small>
+                </p>
             </div>
-            <div class="col-sm text-left">
-                {{ form_row(form.skip) }}
+            <div class="col-sm text-left" style="border-left:2px solid grey">
+                {{ form_widget(form.skip) }}
+                <p>
+                    <small>
+                        Il me manque des éléments pour corriger cette notice.
+                    </small>
+                </p>
             </div>
+
         </div>
         {{ form_end(form) }}
 
