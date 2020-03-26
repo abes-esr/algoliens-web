@@ -1,10 +1,9 @@
 {% extends "base.html.twig" %}
 {% block body %}
-    <h1>WebAlgoLiens</h1>
     <div class="alert alert-secondary">
         <p>Cet outil se base sur les résultats de l'<a href="http://documentation.abes.fr/sudoc/manuels/controle_bibliographique/algoliens/index.html">algorithme AlgoLiens</a> de l'Abes pour identifier des notices pour lesquelles une possible correction a été identifiée.</p>
         <p>
-        L'algorithme de l'Abes propose de récupérer des lots de notices à corriger dans un fichier Excel. Cette interface web se propose de stocker ces informations pour proposer les notices à corriger une à une sans passer par la gestion de fichiers Excel.</p>
+        L'algorithme de l'Abes propose de récupérer des lots de notices à corriger dans un fichier Excel. Cette interface web propose une autre vue sur ces mêmes données, pour proposer les notices à corriger une à une sans passer par la gestion de fichiers Excel.</p>
         <p>
             Cette interface web a pour objectif de :
             <ul>
@@ -15,14 +14,10 @@
                 faciliter le travail à plusieurs sur les notices issues d'un même RCR sans avoir à se séparer le travail dans des fichiers Excel.
             </li>
         </ul>
-        <strong>Cette application n'est pas interconnectée avec les applications de l'Abes. Elle n'est qu'une interface permettant de voir d'une manière différente les résultats d'AlgoLiens.</strong>
+
+        <strong>Cette application n'est pas interconnectée avec les applications de l'Abes. Elle n'est qu'une interface permettant de voir les résultats d'AlgoLiens de manière <i>user-friendly</i>.</strong>
     </div>
-    <h2>
-        Sélection d'un ILN
-    </h2>
-    <ul>
-    {% for iln in ilns %}
-        <li>{{ iln.code }} &mdash; <a href="{{ url("view_iln", {"code": iln.code}) }}">{{  iln.label }}</a></li>
-    {% endfor %}
-    </ul>
+    <div class="text-center">
+        <a class='btn btn-lg btn-success' href="{{ url("view_all_ilns") }}"><strong>&rarr; C'est parti</strong></a>
+    </div>
 {% endblock %}

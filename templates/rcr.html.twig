@@ -23,16 +23,52 @@
         <hr/>
         <div>
             <h2>Erreurs trouvées</h2>
+            <!--
+            <p class="alert alert-secondary">
+                Pour cette notice {{ record.ppn }}, les erreurs suivantes ont été identifiées par AlgoLiens. Elles peuvent être corrigées à l'aide de Winbiw, ou pour celles concernant les liens aux personnes, au travers de Paprika.
+            </p>
             <ul>
                 {% for linkError in record.linkErrors %}
                     <li>
-                        {{ linkError.errorCode }} - {{ linkError.errorText}}
-                        {% if linkError.paprika != ''%}
-                            (voir <a href="{{ linkError.paprika }}">sur Paprika</a>)
+                        {{ linkError.errorCode }} - Au moins {{ linkError.errorText}}
+                        {% if linkError.paprikaLinks|length > 0 %}
+                            <ul>
+                                {% for paprikaLink in linkError.paprikaLinks %}
+                                    <li>{{ paprikaLink.label }} &#8611; <a href="{{ paprikaLink.url }}">corriger à l'aide de Paprika</a></li>
+                                {% endfor %}
+                            </ul>
                         {% endif %}
                     </li>
                 {% endfor %}
             </ul>
+            -->
+            <table class="table table-bordered">
+                <tr>
+                    <th>Code erreur</th>
+                    <th>Libellé erreur</th>
+                    <th>Personne concernée</th>
+                    <th>Action à mener</th>
+                </tr>
+                {% for linkError in record.linkErrors %}
+                    {% if linkError.paprikaLinks|length > 0 %}
+                        {% for paprikaLink in linkError.paprikaLinks %}
+                            <tr>
+                                <td>{{ linkError.errorCode }}</td>
+                                <td>{{ linkError.errorText }}</td>
+                                <td>{{ paprikaLink.label }}</td>
+                                <td><pre><a href="{{ paprikaLink.url }}" target="_blank">Corriger à l'aide de Paprika</a><br/>ou<br/>Corriger dans Winibw</pre></td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                            <tr>
+                                <td>{{ linkError.errorCode }}</td>
+                                <td>{{ linkError.errorText }}</td>
+                                <td><i>n/a</i></td>
+                                <td><pre>Corriger dans Winibw</pre></td>
+                            </tr>
+                    {% endif %}
+                {% endfor %}
+            </table>
         </div>
 
         {{ form_start(form) }}

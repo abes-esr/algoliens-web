@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -33,9 +35,14 @@ class LinkError
     private $record;
 
     /**
-     * @ORM\Column(type="string", length=1024, nullable=true)
+     * @ORM\OneToMany(targetEntity="App\Entity\PaprikaLink", mappedBy="linkError")
      */
-    private $paprika;
+    private $paprikaLinks;
+
+    public function __construct()
+    {
+        $this->paprikaLinks = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -78,14 +85,33 @@ class LinkError
         return $this;
     }
 
-    public function getPaprika(): ?string
+    /**
+     * @return Collection|PaprikaLink[]
+     */
+    public function getPaprikaLinks(): Collection
     {
-        return trim($this->paprika);
+        return $this->paprikaLinks;
     }
 
-    public function setPaprika(?string $paprika): self
+    public function addPaprikaLink(PaprikaLink $paprikaLink): self
     {
-        $this->paprika = $paprika;
+        if (!$this->paprikaLinks->contains($paprikaLink)) {
+            $this->paprikaLinks[] = $paprikaLink;
+            $paprikaLink->setLinkError($this);
+        }
+
+        return $this;
+    }
+
+    public function removePaprikaLink(PaprikaLink $paprikaLink): self
+    {
+        if ($this->paprikaLinks->contains($paprikaLink)) {
+            $this->paprikaLinks->removeElement($paprikaLink);
+            // set the owning side to null (unless already changed)
+            if ($paprikaLink->getLinkError() === $this) {
+                $paprikaLink->setLinkError(null);
+            }
+        }
 
         return $this;
     }

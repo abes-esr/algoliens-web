@@ -8,14 +8,21 @@
     </head>
     <body class="d-flex flex-column h-100">
         <div class="container">
+            <div class="row">
+                <div class="col-sm">
+                    <a href="{{ url("home") }}">WebAlgoLiens</a>
+                </div>
+            </div>
+            {% block header %}
+            {% endblock %}
+
             {% for label, messages in app.flashes() %}
                 {% for message in messages %}
                     <div class="alert alert-{{ label }}">{{ message }}</div>
                 {% endfor %}
             {% endfor %}
-            {% block body %}{% endblock %}
             <hr/>
-            <a href="{{ url("home") }}">Accueil</a>
+            {% block body %}{% endblock %}
         </div>
         {% block javascripts %}
             <!-- Renders app.js & a webpack runtime.js file

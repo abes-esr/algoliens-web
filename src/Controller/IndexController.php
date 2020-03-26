@@ -7,10 +7,15 @@ use App\Entity\LinkError;
 use App\Entity\Rcr;
 use App\Entity\Record;
 use App\Form\RecordType;
+use App\Repository\IlnRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use function PHPSTORM_META\type;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Form;
+use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Session;
@@ -23,8 +28,57 @@ class IndexController extends AbstractController
      */
     public function index()
     {
+        return $this->render("index.html.twig");
+    }
+
+    /**
+     * @Route("/params", name="settings")
+     */
+    public function settings(Request $request)
+    {
+        $form = $this->createFormBuilder();
+        $session = new Session();
+        if ( ($session->has("winnie")) && ($session->get("winnie") == "1") )
+        {
+            $form = $form->add('winnie', CheckboxType::class,
+            [
+                "label" => "WinbiW est installé sur mon poste",
+                "attr" => ["checked" => "checked"],
+                "required" => false
+            ]);
+        } else {
+            $form = $form->add('winnie', CheckboxType::class,
+                [
+                    "label" => "WinbiW est installé sur mon poste",
+                    "required" => false
+                ]);
+        }
+
+        $form = $form->add('save', SubmitType::class, ["label" => "Enregistrer"])
+            ->getForm();
+
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $settingsData = $form->getData();
+            $session->set("winnie", $settingsData["winnie"]);
+            return $this->redirect($this->generateUrl("view_all_ilns"));
+        }
+
+        return $this->render("settings.html.twig", ["form" => $form->createView()]);
+    }
+
+    /**
+     * @Route("/ilns", name="view_all_ilns")
+     */
+    public function ilns()
+    {
+        $session = new Session();
+        if (!$session->has("winnie")) {
+            return $this->redirect($this->generateUrl("settings"));
+        }
         $ilns = $this->getDoctrine()->getRepository(Iln::class)->findAll();
-        return $this->render("index.html.twig", ["ilns" => $ilns]);
+
+        return $this->render("ilns.html.twig", ["ilns" => $ilns]);
     }
 
     /**
@@ -85,7 +139,9 @@ class IndexController extends AbstractController
                 $countCorrected = $em->getRepository(Record::class)->countCorrectedForRcr($record->getRcrCreate());
                 $record->getRcrCreate()->setNumberOfRecordsCorrected($countCorrected);
 
-                $session->getFlashBag()->add('success', "+ 1 notice corrigée ! ( $countCorrected )");
+                $session = new Session();
+                $session->start();
+                $session->getFlashBag()->add('success', "Correction de la notice enregistrée, elle ne sera plus proposée par cette interface");
             } else {
                 $record->setLocked(null);
             }

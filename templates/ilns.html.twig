@@ -1,0 +1,11 @@
+{% extends "base.html.twig" %}
+{% block header %}
+    {% include "header_settings.html.twig" %}
+{% endblock %}
+
+{% block body %}
+    <h1>Veuillez sélectionner votre ILN</h1>
+    {% for iln in ilns %}
+        <a class="btn btn-info btn-lg" href="{{ url("view_iln", {'code': iln.code}) }}">{{ iln.label }}<br/>ILN {{ iln.code }}</a>
+    {%  endfor %}
+{% endblock %}

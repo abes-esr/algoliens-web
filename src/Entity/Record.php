@@ -60,6 +60,16 @@ class Record
      */
     private $docTypeLabel;
 
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private $marcBefore;
+
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private $marcAfter;
+
     public function __construct()
     {
         $this->linkErrors = new ArrayCollection();
@@ -186,4 +196,29 @@ class Record
 
         return $this;
     }
+
+    public function getMarcBefore(): ?string
+    {
+        return $this->marcBefore;
+    }
+
+    public function setMarcBefore(?string $marcBefore): self
+    {
+        $this->marcBefore = $marcBefore;
+
+        return $this;
+    }
+
+    public function getMarcAfter(): ?string
+    {
+        return $this->marcAfter;
+    }
+
+    public function setMarcAfter(?string $marcAfter): self
+    {
+        $this->marcAfter = $marcAfter;
+
+        return $this;
+    }
+
 }

@@ -4,6 +4,7 @@ namespace App\Command;
 
 use App\Entity\Iln;
 use App\Entity\LinkError;
+use App\Entity\PaprikaLink;
 use App\Entity\Rcr;
 use App\Entity\Record;
 use Doctrine\ORM\EntityManagerInterface;
@@ -37,11 +38,14 @@ class PopulareRcrErrorsCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-
-        print "Vérifier commande de mise à jour des nombres !";
-        exit;
         $io = new SymfonyStyle($input, $output);
         $arg1 = $input->getArgument('arg1');
+        $this->em->getConnection()->exec("SET FOREIGN_KEY_CHECKS = 0;");
+        $this->em->getConnection()->exec("UPDATE `rcr` set number_of_records = 1;");
+        $this->em->getConnection()->exec("truncate link_error;");
+        $this->em->getConnection()->exec("truncate paprika_link;");
+        $this->em->getConnection()->exec("truncate record;");
+        $this->em->getConnection()->exec("SET FOREIGN_KEY_CHECKS = 1;");
         $ilnNumber = $input->getArgument('arg1');
         if (!$ilnNumber) {
             $io->error("Manque le code de l'ILN en argument");
@@ -58,21 +62,25 @@ class PopulareRcrErrorsCommand extends Command
         $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
 
         foreach ($rcrs as $rcr) {
+            // $rcr = $this->em->getRepository(Rcr::class)->findOneBy(["code" => '330632101']);
             $url = sprintf("https://www.idref.fr/AlgoLiens?rcr=%s&rownum=100000&paprika=1", $rcr->getCode());
+            print $url."\n";
             $content = file_get_contents($url);
-
+            $startRcr = microtime(true);
             $lines = preg_split("/\n/", $content);
             $lines = array_slice($lines, 3);
 
             $io->writeln("Start load for ".$rcr->getCode());
             $count = 0;
+            $countRecordCreated = 0;
+            $ppnPaprikaAlreadySet = [];
             foreach ($lines as $line) {
-                $io->writeln($count);
                 $error = preg_split("/\t/", $line);
                 if (sizeof($error) > 1) {
                     $ppn = trim($error[0]);
                     $record = $this->em->getRepository(Record::class)->findOneBy(["ppn" => $ppn]);
                     if (!$record) {
+                        $countRecordCreated++;
                         $record = new Record();
                         $record->setPpn($ppn);
                         $record->setRcrCreate($rcr);
@@ -85,15 +93,26 @@ class PopulareRcrErrorsCommand extends Command
                         $record->setDocTypeLabel($error[7]);
 
                         $this->em->persist($record);
-                        $this->em->flush();
                     }
 
                     $errorObject = new LinkError();
                     $errorObject->setErrorText($error[3]);
                     $errorObject->setErrorCode($error[5]);
-                    $paprikaLink = $error[8];
-                    if ($paprikaLink ) {
-                        $errorObject->setPaprika($paprikaLink);
+                    $paprikaUrl = trim($error[8]);
+                    if ($paprikaUrl) {
+                        if (isset($ppnPaprikaAlreadySet[$ppn])) {
+                            print "PPN ".$ppn." already done\n";
+                        } else {
+                            $ppnPaprikaAlreadySet[$ppn] = 1;
+
+                            $paprikaUrls = preg_split("/#/", $paprikaUrl);
+                            foreach ($paprikaUrls as $tmpUrl) {
+                                $paprikaLink = new PaprikaLink();
+                                $paprikaLink->setUrl($tmpUrl);
+                                $this->em->persist($paprikaLink);
+                                $errorObject->addPaprikaLink($paprikaLink);
+                            }
+                        }
                     }
                     $errorObject->setRecord($record);
                     $this->em->persist($errorObject);
@@ -101,8 +120,10 @@ class PopulareRcrErrorsCommand extends Command
                 }
             }
 
+            $rcr->setNumberOfRecords($countRecordCreated);
+            $this->em->persist($rcr);
             $this->em->flush();
-            $io->writeln(sprintf("%s : %s errors loaded", $rcr->getCode(), $count));
+            $io->writeln(sprintf("%s : %s errors loaded [%s]", $rcr->getCode(), $count, (microtime(true) - $startRcr)));
         }
 
 
