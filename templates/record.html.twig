@@ -1,0 +1,128 @@
+{% extends "base.html.twig" %}
+{% block header %}
+    {% include "header_settings.html.twig" %}
+{% endblock %}
+{% block javascripts %}
+    {% if not empty %}
+    <script type="text/javascript">
+        var url_raw_record = "{{ url("raw_record", {'ppn': record.ppn}) }}";
+
+        var url_is_localized = "";
+        {% if record.urlCallType == 1 %}
+            var url_is_localized = "{{ url("verif_loca", {'ppn': record.ppn, 'rcr': rcr.code}) }}";
+        {% endif %}
+    </script>
+
+    {{ encore_entry_script_tags('record_view') }}
+    {% endif %}
+    <!-- Renders app.js & a webpack runtime.js file
+        <script src="/build/runtime.js"></script>
+        <script src="/build/app.js"></script> -->
+{% endblock %}
+
+{% block body %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url('home') }}">Accueil</a></li>
+            <li class="breadcrumb-item"><a href="{{ url('view_iln', {'code': iln.code}) }}">{{ iln.label }}</a></li>
+            <li class="breadcrumb-item"><a href="{{ url('view_rcr', {'ilnCode': iln.code, 'rcrCode': rcr.code}) }}">{{ rcr.label }}</a></li>
+            {% if not empty %}
+                <li class="breadcrumb-item active" aria-current="page">Notice n°{{ record.ppn }}</li>
+            {% endif %}
+        </ol>
+    </nav>
+
+    {% if empty %}
+        <div>
+            Plus aucune notice à traiter pour ce RCR !<br/>
+            Peut-être un <a href="{{ url('view_iln', {'code': iln.code}) }}">autre RCR de cet ILN</a> ?
+        </div>
+    {% else %}
+
+            <h2>Notice</h2>
+            <div id="unloca"></div>
+            <p>
+                La notice n°<a target="_blank" href="http://www.sudoc.fr/{{ record.ppn }}">{{ record.ppn }}</a> vous est proposée car
+                {% if record.getUrlCallType() == 1 %}
+                    le RCR {{ rcr.code }} en est le créateur
+                {% else %}
+                    le RCR {{ rcr.code }} est le seul établissement du réseau localisé dessus
+                {% endif %}
+                et qu'elle comporte les erreurs suivantes :
+                <ul>
+                {% for linkError in record.linkErrors %}
+                    <li><strong>{{ linkError.errorCode }}</strong> : au moins {{ linkError.errorText }};</li>
+                {% endfor %}
+                </ul>
+        <div>
+            <a href="#" id="btn_unimarc" class="btn btn-info">Afficher la notice unimarc</a>
+            <div id="sudoc_record" class="collapse">
+                <div class="lds-ellipsis">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+            </div>
+        </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <hr/>
+                    <h2>Actions à mener</h2>
+                    <p>
+                    {% if app.session.get("winnie") %}
+                        Corriger la notice sur WinIBW<br/>
+                    {% endif %}
+                        {% set countLinks = 0 %}
+                        {% for linkError in record.linkErrors %}
+                            {% if linkError.paprikaLinks|length > 0 %}
+                                {% for paprikaLink in linkError.paprikaLinks %}
+                                    {% if countLinks == 0 %}
+                                        {% set countLinks = 1 %}
+                                        {% if app.session.get("winnie") %}
+                                            <strong>OU</strong><br/>
+                                        {% endif %}
+                        Corriger les liens suivants à l'aide de Paprika :
+                                        <ul>
+
+
+                                    {% endif %}
+
+                                    <li>{{ paprikaLink.label }} &rarr; <a target="_blank" href="{{ paprikaLink.url }}">voir sur Paprika</a></li>
+
+                                {% endfor %}
+                            {% endif %}
+                        {%  endfor %}
+                        {% if countLinks == 1 %}
+                            </ul>
+                            {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        {{ form_start(form) }}
+        <div class="row">
+
+            <div class="col-sm text-right">
+                {{ form_widget(form.validate) }}
+                <p>
+                    <small>
+                        Plus la peine de la proposer aux collègues
+                    </small>
+                </p>
+            </div>
+            <div class="col-sm text-left" style="border-left:2px solid grey">
+                {{ form_widget(form.skip) }}
+                <p>
+                    <small>
+                        Il me manque des éléments pour corriger cette notice.
+                    </small>
+                </p>
+            </div>
+
+        </div>
+        {{ form_end(form) }}
+    {% endif %}
+{% endblock %}

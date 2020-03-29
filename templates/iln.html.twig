@@ -6,7 +6,7 @@
 {% block body %}
     <h1>{{  iln.label }}</h1>
     <div class="alert alert-secondary">
-        <p>En choisissant un RCR ci-dessous, une notice créée par ce RCR et qui a un problème de lien vous sera proposée (il se peut que le RCR ne soit plus localisé sur cette notice, cet algorithme se contente pour le moment de vérifier le créateur).</p><p> Vous pouvez alors :</p>
+        <p>En choisissant un RCR ci-dessous, une notice créée par ce RCR et qui a un problème de lien vous sera proposée.</p><p> Vous pouvez alors :</p>
         <ul>
             <li>faire les corrections nécessaires via Winibw ou Paprika → cette notice ne sera plus proposées</li>
             <li>passer votre tour → cette notice pourra être proposée à nouveau à l'avenir</li>
@@ -17,15 +17,13 @@
         <tr>
            <th>RCR</th>
            <th>Libellé</th>
-            <th>Nombre de notices</th>
-            <th>Nombre de notices corrigées</th>
+            <th>Nombre de notices disponibles</th>
         </tr>
     {% for rcr in rcrs %}
         <tr>
            <td>{{ rcr.code }}</td>
             <td><a href="{{  url('view_rcr', {ilnCode: iln.code, rcrCode: rcr.code}) }}">{{ rcr.label }}</a></td>
-            <td>{{ rcr.numberOfRecords }}</td>
-            <td>{{ rcr.numberOfRecordsCorrected }}</td>
+            <td>{{ rcr.numberOfRecordsAvailable }}</td>
         </tr>
     {% endfor %}
     </table>

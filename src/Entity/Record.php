@@ -5,9 +5,11 @@ namespace App\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\Index;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\RecordRepository")
+ * @ORM\Table(indexes={@Index(name="idx_ppn", columns={"ppn"})})
  */
 class Record
 {
@@ -70,9 +72,25 @@ class Record
      */
     private $marcAfter;
 
+    /**
+     * @ORM\Column(type="smallint")
+     */
+    private $urlCallType;
+
+    /**
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $winnie;
+
     public function __construct()
     {
         $this->linkErrors = new ArrayCollection();
+    }
+
+    public function setId(int $id): self
+    {
+        $this->id = $id;
+        return $this;
     }
 
     public function getId(): ?int
@@ -164,7 +182,7 @@ class Record
         return $this->locked;
     }
 
-    public function setLocked(): self
+    public function setLocked(\DateTimeInterface $lastUpdate = null): self
     {
         $endOfLock = new \DateTime();
         $endOfLock = $endOfLock->modify("+1 hour");
@@ -217,6 +235,30 @@ class Record
     public function setMarcAfter(?string $marcAfter): self
     {
         $this->marcAfter = $marcAfter;
+
+        return $this;
+    }
+
+    public function getUrlCallType(): ?int
+    {
+        return $this->urlCallType;
+    }
+
+    public function setUrlCallType(int $urlCallType): self
+    {
+        $this->urlCallType = $urlCallType;
+
+        return $this;
+    }
+
+    public function getWinnie(): ?bool
+    {
+        return $this->winnie;
+    }
+
+    public function setWinnie(?bool $winnie): self
+    {
+        $this->winnie = $winnie;
 
         return $this;
     }

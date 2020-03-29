@@ -54,6 +54,11 @@ class Rcr
      */
     private $numberOfRecordsCorrected;
 
+    /**
+     * @ORM\Column(type="smallint")
+     */
+    private $harvested;
+
     public function __construct()
     {
         $this->records = new ArrayCollection();
@@ -168,6 +173,23 @@ class Rcr
     public function setNumberOfRecordsCorrected(?int $numberOfRecordsCorrected): self
     {
         $this->numberOfRecordsCorrected = $numberOfRecordsCorrected;
+
+        return $this;
+    }
+
+    public function getNumberOfRecordsAvailable(): ?int
+    {
+        return ($this->getNumberOfRecords() - $this->getNumberOfRecordsCorrected());
+    }
+
+    public function getHarvested(): ?int
+    {
+        return $this->harvested;
+    }
+
+    public function setHarvested(int $harvested): self
+    {
+        $this->harvested = $harvested;
 
         return $this;
     }

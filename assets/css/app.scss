@@ -68,3 +68,23 @@ h2 {
     transform: translate(24px, 0);
   }
 }
+
+#h1rcr {
+  padding-left: 2em;
+}
+
+#h1ppn {
+  padding-left: 4em;
+}
+
+#h1rcr::before, #h1ppn::before {
+  content: "→ ";
+}
+
+#unloca {
+  display: none;
+}
+
+#btn_unimarc {
+  margin-bottom: 1em;
+}

@@ -96,6 +96,20 @@ class IndexController extends AbstractController
         );
     }
 
+    private function getOneRecord(Rcr $rcr, ?string $ppn) {
+        return $record = $this->getDoctrine()->getRepository(Record::class)->findOneRandom($rcr);
+        if (is_null($ppn)) {
+            $session = new Session();
+            if ($session->get("winnie")) {
+                $record = $this->getDoctrine()->getRepository(Record::class)->findOneRandom($rcr);
+            } else {
+                $record = $this->getDoctrine()->getRepository(Record::class)->findOneRandomNoWinnie($rcr);
+            }
+        } else {
+            $record = $this->getDoctrine()->getRepository(Record::class)->findOneBy(["ppn" => $ppn]);
+        }
+        return $record;
+    }
     /**
      * @Route("/iln/{ilnCode}/rcr/{rcrCode}/{ppn?}", name="view_rcr")
      * @Entity("iln", expr="repository.findOneBy({'code': ilnCode})")
@@ -103,35 +117,27 @@ class IndexController extends AbstractController
      */
     public function rcrView(Iln $iln, Rcr $rcr, ?string $ppn, EntityManagerInterface $em, Request $request)
     {
-        // On va unlocked les notices qui doivent l'être :
-        $this->getDoctrine()->getRepository(Record::class)->unlockRecords();
-        if (is_null($ppn)) {
-            $record = $this->getDoctrine()->getRepository(Record::class)->findOneRandom($rcr);
-        } else {
-            $record = $this->getDoctrine()->getRepository(Record::class)->findOneBy(["ppn" => $ppn]);
-        }
-
-
-        if (!$record) {
-            return $this->render("rcr.html.twig",
+        $record = $this->getOneRecord($rcr, $ppn);
+        // TODO : traiter base vide
+        if (is_null($record)) {
+            return $this->render("record.html.twig",
                 [
                     "iln" => $iln,
                     "rcr" => $rcr,
                     "empty" => 1
                 ]
             );
+        } else {
+            dd($record);
         }
-        $record->setLocked();
-
-        $em->persist($record);
-        $em->flush();
 
         $form = $this->createForm(RecordType::class, $record);
         $form->handleRequest($request);
-        if ($form->isSubmitted()) {
+        if ($form->isSubmitted() && $form->isValid()) {
             $submitButton = $form->getClickedButton();
-
-            $record = $form->getData();
+            $recordForm = $form->getData();
+            $id = $recordForm->getId();
+            $record = $this->getDoctrine()->getRepository(Record::class)->find($id);
 
             if ($submitButton->getName() == "validate") {
                 // On va mettre à jour
@@ -140,16 +146,24 @@ class IndexController extends AbstractController
                 $record->getRcrCreate()->setNumberOfRecordsCorrected($countCorrected);
 
                 $session = new Session();
-                $session->start();
-                $session->getFlashBag()->add('success', "Correction de la notice enregistrée, elle ne sera plus proposée par cette interface");
+                $session->getFlashBag()->add('success', "Correction de la notice n°".$record->getPpn()." enregistrée, elle ne sera plus proposée par cette interface.");
+
             } else {
                 $record->setLocked(null);
             }
+
             $em->persist($record);
             $em->flush();
+
+            return $this->redirect($this->generateUrl("view_rcr", ['ilnCode' => $iln->getCode(), 'rcrCode' => $rcr->getCode()]));
         }
 
-        return $this->render("rcr.html.twig",
+        $record->setLocked();
+
+        $em->persist($record);
+        $em->flush();
+
+        return $this->render("record.html.twig",
             [
                 "iln" => $iln,
                 "rcr" => $rcr,
@@ -159,29 +173,4 @@ class IndexController extends AbstractController
             ]
         );
     }
-
-    /**
-     * @Route("/rawrecord/{ppn}", name="raw_record")
-     */
-    public function rawRecord(string $ppn)
-    {
-        $xml = file_get_contents("http://www.sudoc.fr/".$ppn.".xml");
-        $record = new \SimpleXMLElement($xml);
-        $output = "";
-        foreach ($record->datafield as $datafield) {
-            $tag = (string) $datafield->attributes()["tag"][0];
-            $output .= $tag." ";
-            foreach ($datafield->subfield as $subfield) {
-                $code = (string) $subfield->attributes()["code"][0];
-                $value = (string) $subfield;
-
-                $output .= "$$code $value ";
-            }
-            $output .= "\n";
-        }
-
-        return new Response("<pre>$output</pre>");
-    }
-
-
 }

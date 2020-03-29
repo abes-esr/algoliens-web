@@ -51,7 +51,7 @@ class LinkError
 
     public function getErrorText(): ?string
     {
-        return $this->errorText;
+        return trim($this->errorText);
     }
 
     public function setErrorText(string $errorText): self

@@ -44,6 +44,12 @@ class HarvestRecordsCommand extends Command
     }
 
     private function getAlgoLienContent($baseurl, $rownum = 10000) {
+        if ($rownum == 0) {
+            // Si on arrive à 0, on abandonne
+            $this->io->writeln("<error>Récupération impossible, on abandonne</error>");
+            return null;
+            return $this->getAlgoLienContent($baseurl, 1000);
+        }
         $url = $baseurl."&rownum=".$rownum;
         $this->io->writeln("WS full URL : ".$url);
         $client = HttpClient::create();
@@ -53,7 +59,9 @@ class HarvestRecordsCommand extends Command
             ]);
             $content = $response->getContent();
         } catch (\Exception $e) {
+
             $this->io->writeln("<error>WS : erreur téléchargement, on repart pour ".intval($rownum / 2)."</error>");
+
             return $this->getAlgoLienContent($baseurl, intval($rownum / 2));
         }
         return $content;
@@ -61,67 +69,78 @@ class HarvestRecordsCommand extends Command
     }
 
     private function processUrl(Rcr $rcr, string $url, int $urlCallType) {
+        $startRcr = microtime(true);
         $this->io->writeln("WS : ".$url);
         $start = microtime(true);
         $content = $this->getAlgoLienContent($url, 10000);
+        if (is_null($content)) {
+            return null;
+        }
         $this->io->writeln("WS : fin (".(microtime(true) - $start).")");
 
-        $startRcr = microtime(true);
         $lines = preg_split("/\n/", $content);
         $lines = array_slice($lines, 3);
 
         $count = 0;
         $countRecordCreated = 0;
+
         $ppnPaprikaAlreadySet = [];
         foreach ($lines as $line) {
             $error = preg_split("/\t/", $line);
             if (sizeof($error) > 1) {
                 $ppn = trim($error[0]);
                 $record = $this->em->getRepository(Record::class)->findOneBy(["ppn" => $ppn, "rcrCreate" => $rcr]);
-                if (!$record) {
-                    $countRecordCreated++;
-                    $record = new Record();
-                    $record->setPpn($ppn);
-                    $record->setRcrCreate($rcr);
-                    $record->setUrlCallType($urlCallType);
 
-                    $date = trim($error[4]);
-                    $date = \DateTime::createFromFormat('Y-m-j H:i:s', $date );
-                    $record->setLastUpdate($date);
-                    $record->setStatus(0);
-                    $record->setDocTypeCode($error[6]);
-                    $record->setDocTypeLabel($error[7]);
+                if ( (!is_null($record)) && ($record->getUrlCallType() != $urlCallType) ) {
+                    $this->io->write(".");
+                } else
+                {
+                    if (is_null($record)) {
+                        $countRecordCreated++;
+                        $record = new Record();
+                        $record->setPpn($ppn);
+                        $record->setRcrCreate($rcr);
+                        $record->setUrlCallType($urlCallType);
 
-                    $this->em->persist($record);
-                }
+                        $date = trim($error[4]);
+                        $date = \DateTime::createFromFormat('Y-m-j H:i:s', $date );
+                        $record->setLastUpdate($date);
+                        $record->setStatus(0);
+                        $record->setDocTypeCode($error[6]);
+                        $record->setDocTypeLabel($error[7]);
 
-                $errorObject = new LinkError();
-                $errorObject->setErrorText($error[3]);
-                $errorObject->setErrorCode($error[5]);
-                $paprikaUrl = trim($error[8]);
-                if ($paprikaUrl) {
-                    if (!isset($ppnPaprikaAlreadySet[$ppn])) {
-                        $ppnPaprikaAlreadySet[$ppn] = 1;
+                        $this->em->persist($record);
+                        $this->em->flush();
+                    }
 
-                        $paprikaUrls = preg_split("/#/", $paprikaUrl);
-                        foreach ($paprikaUrls as $tmpUrl) {
-                            $paprikaLink = new PaprikaLink();
-                            $paprikaLink->setUrl($tmpUrl);
-                            $this->em->persist($paprikaLink);
-                            $errorObject->addPaprikaLink($paprikaLink);
+                    $errorObject = new LinkError();
+                    $errorObject->setErrorText($error[3]);
+                    $errorObject->setErrorCode($error[5]);
+                    $paprikaUrl = trim($error[8]);
+                    if ($paprikaUrl) {
+                        if (!isset($ppnPaprikaAlreadySet[$ppn])) {
+                            $ppnPaprikaAlreadySet[$ppn] = 1;
+
+                            $paprikaUrls = preg_split("/#/", $paprikaUrl);
+                            foreach ($paprikaUrls as $tmpUrl) {
+                                $paprikaLink = new PaprikaLink();
+                                $paprikaLink->setUrl($tmpUrl);
+                                $this->em->persist($paprikaLink);
+                                $errorObject->addPaprikaLink($paprikaLink);
+                            }
                         }
                     }
+                    $errorObject->setRecord($record);
+                    $this->em->persist($errorObject);
+                    $count++;
                 }
-                $errorObject->setRecord($record);
-                $this->em->persist($errorObject);
-                $count++;
             }
         }
 
         $rcr->setNumberOfRecords($countRecordCreated);
         $this->em->persist($rcr);
         $this->em->flush();
-        $this->io->writeln(sprintf("<info>%s erreurs importées</info> (durée totale : %s)", $count, (microtime(true) - $startRcr)));
+        $this->io->writeln(sprintf("\n<info>%s erreurs importées / %s notices créées</info> (durée totale : %s)", $count, $countRecordCreated, (microtime(true) - $startRcr)));
     }
 
     protected function cleanDatabaseFromURL2() {
@@ -135,7 +154,8 @@ class HarvestRecordsCommand extends Command
 
     protected function emptyDatabase() {
         $this->em->getConnection()->exec("SET FOREIGN_KEY_CHECKS = 0;");
-        $this->em->getConnection()->exec("UPDATE `rcr` set number_of_records = 1;");
+        $this->em->getConnection()->exec("UPDATE `rcr` set number_of_records = 0;");
+        $this->em->getConnection()->exec("UPDATE `rcr` set harvested = 0;");
         $this->em->getConnection()->exec("truncate link_error;");
         $this->em->getConnection()->exec("truncate paprika_link;");
         $this->em->getConnection()->exec("truncate record;");
@@ -158,24 +178,53 @@ class HarvestRecordsCommand extends Command
             exit;
         }
 
+        print "Clean DATABASE !!!";
+        exit;
         $this->emptyDatabase();
         $this->cleanDatabaseFromURL2();
 
         $rcrs = $iln->getRcrs();
+        $nbCalls = 0;
         foreach ($rcrs as $rcr) {
             // $rcr = $this->em->getRepository(Rcr::class)->findOneBy(["code" => '243222202']);
             $this->io->title("Traitement RCR : ".$rcr->getCode()." - ".$rcr->getLabel());
-            $url = sprintf("https://www.idref.fr/AlgoLiens?rcr=%s&rownum=100000&paprika=1", $rcr->getCode());
-            $this->processUrl($rcr, $url, URL_RCR_CREA);
+            if ($rcr->getHarvested() == 2) {
+                $this->io->writeln("<info>URL 1 & 2 OK</info>");
+            } else {
+                if ($rcr->getHarvested() == 1) {
+                    $this->io->writeln("<info>URL 1 ok</info>");
+                } else {
+                    // URL_RCR_CREA
+                    $url = sprintf("https://www.idref.fr/AlgoLiens?rcr=%s&paprika=1", $rcr->getCode());
+                    $this->processUrl($rcr, $url, URL_RCR_CREA);
+                    $nbCalls++;
+                    $rcr->setHarvested(1);
+                    $this->em->persist($rcr);
+                    $this->em->flush();
+                }
 
-            $this->io->writeln("");
+                $this->io->writeln("");
 
-            $url = sprintf("https://www.idref.fr/AlgoLiens?localisationRcr=%s&unica=localisationRcr&paprika=1", $rcr->getCode());
-            $this->processUrl($rcr, $url, URL_RCR_LOCA);
+                $url = sprintf("https://www.idref.fr/AlgoLiens?localisationRcr=%s&unica=localisationRcr&paprika=1", $rcr->getCode());
+                $this->processUrl($rcr, $url, URL_RCR_LOCA);
+                $nbCalls++;
+                $this->io->writeln("");
+                $rcr->setHarvested(2);
+                $this->em->persist($rcr);
+                $this->em->flush();
+            }
+
+            // repos de 10 secondes pour laisser le serveur tranquille
+            if ($nbCalls > 0) {
+                $sleep = rand(0, 10);
+                $this->io->writeln("Sleep for ".$sleep);
+                //sleep($sleep);
+            }
+
         }
 
 
-        $io->success('You have a new command! Now make it your own! Pass --help to see your options.');
+        $this->io->success('Harvesting terminé avec succès !');
 
         return 0;
     }

@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\LinkError;
 use App\Entity\Rcr;
 use App\Entity\Record;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -20,6 +21,30 @@ class RecordRepository extends ServiceEntityRepository
         parent::__construct($registry, Record::class);
     }
 
+    public function findOneRandomNoWinnie(Rcr $rcr) {
+        $countResults = $this->createQueryBuilder('l')
+            ->select("COUNT(l)")
+            ->where("l.winnie = 0 and l.locked is null and l.status = 0 and l.rcrCreate = :rcr")
+            ->setParameter('rcr', $rcr)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $offset = rand(0, $countResults);
+
+        $result = $this->createQueryBuilder('l')
+            ->where("l.winnie = 0 and l.locked is null and l.status = 0 and l.rcrCreate = :rcr")
+            ->setParameter('rcr', $rcr)
+            ->getQuery()
+            ->setFirstResult($offset)
+            ->setMaxResults(1)
+            ->getResult();
+
+        if (sizeof($result) == 0) {
+            return null;
+        }
+        return $result[0];
+    }
+
     public function findOneRandom(Rcr $rcr) {
         $countResults = $this->createQueryBuilder('l')
             ->select("COUNT(l)")
@@ -27,7 +52,6 @@ class RecordRepository extends ServiceEntityRepository
             ->setParameter('rcr', $rcr)
             ->getQuery()
             ->getSingleScalarResult();
-
         $offset = rand(0, $countResults);
 
         $result = $this->createQueryBuilder('l')
@@ -37,6 +61,7 @@ class RecordRepository extends ServiceEntityRepository
             ->setFirstResult($offset)
             ->setMaxResults(1)
             ->getResult();
+
         if (sizeof($result) == 0) {
             return null;
         }
