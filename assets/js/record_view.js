@@ -1,7 +1,10 @@
 var $ = require('jquery');
 $( document ).ready(function() {
-    $.get( url_raw_record, function( response ) {
-        $("#sudoc_record").html(response );
+    $.getJSON( url_raw_record, function( response ) {
+        $("#sudoc_record").html(response["unimarc_record"] );
+        if (response["title"] != "") {
+            $("#record_title").append(" - <i>"  + response["title"] + "</i>");
+        }
     });
 
     if (url_is_localized) {
@@ -24,6 +27,6 @@ $( document ).ready(function() {
                 return $("#sudoc_record").is(":visible") ? "Masquer la notice Unimarc" : "Afficher la notice unimarc";
             });
         });
-
+        return false;
     });
 });

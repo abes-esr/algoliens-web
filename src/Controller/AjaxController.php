@@ -19,25 +19,35 @@ class AjaxController extends AbstractController
         $url = "http://www.sudoc.fr/".$ppn.".xml";
         $xml = file_get_contents($url);
         $record = new \SimpleXMLElement($xml);
-        $output = "";
+        $unimarc = "";
+        $title = "";
         foreach ($record->datafield as $datafield) {
             $tag = (string) $datafield->attributes()["tag"][0];
-            $output .= $tag." ";
+            $unimarc .= $tag." ";
             foreach ($datafield->subfield as $subfield) {
                 $code = (string) $subfield->attributes()["code"][0];
                 $value = (string) $subfield;
 
-                $output .= "$$code $value ";
+                if ( ($tag == 200) && ($code == "a") ) {
+                    $title = $value;
+                }
+                $unimarc .= "$$code $value ";
             }
-            $output .= "\n";
+            $unimarc .= "\n";
         }
 
-        $record = $this->getDoctrine()->getRepository(Record::class)->findOneBy(["ppn" => $ppn]);
-        $record->setMarcBefore($output);
-        $em->persist($record);
+
+        $records = $this->getDoctrine()->getRepository(Record::class)->findBy(["ppn" => $ppn]);
+        foreach ($records as $record) {
+            $record->setMarcBefore($unimarc);
+            $em->persist($record);
+        }
         $em->flush();
 
-        return new Response("<pre>$output</pre>");
+        return new JsonResponse([
+            "title" => $title,
+            "unimarc_record" => "<pre>$unimarc</pre>"
+        ]);
     }
 
     /**
