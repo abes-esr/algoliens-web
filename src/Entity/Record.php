@@ -90,6 +90,11 @@ class Record
      */
     private $winnie;
 
+    /**
+     * @ORM\Column(type="string", length=512, nullable=true)
+     */
+    private $comment;
+
     public function __construct()
     {
         $this->linkErrors = new ArrayCollection();
@@ -267,6 +272,18 @@ class Record
     public function setWinnie(?bool $winnie): self
     {
         $this->winnie = $winnie;
+
+        return $this;
+    }
+
+    public function getComment(): ?string
+    {
+        return $this->comment;
+    }
+
+    public function setComment(?string $comment): self
+    {
+        $this->comment = $comment;
 
         return $this;
     }

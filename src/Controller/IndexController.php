@@ -144,6 +144,7 @@ class IndexController extends AbstractController
                     $session = $request->getSession();
                     $session->getFlashBag()->add('success', "Cette notice ne sera plus proposée. Elle sera listée dans celles à reprendre document en main.");
                     $record->setStatus(Record::SKIP_PHYSICAL_NEEDED);
+                    $record->setComment($recordForm->getComment());
                 } else {
                     $record->setLocked(null);
                 }

@@ -41,6 +41,13 @@
 
             <h2 id="record_title">Notice {{ record.ppn }}</h2>
             <div id="unloca"></div>
+            {% if record.comment != "" %}
+                <div class="alert alert-warning">
+                Cette notice a déjà été proposé à un·e collègue qui l'a passée avec le commentaire suivant : <br/>
+                    <i>{{ record.comment }}</i>
+                </div>
+            {% endif %}
+
             <p>
                 La notice n°<a target="_blank" href="http://www.sudoc.fr/{{ record.ppn }}">{{ record.ppn }}</a> vous est proposée car
                 {% if record.getUrlCallType() == 1 %}
@@ -115,8 +122,9 @@
             </div>
             <div class="col-sm text-left" style="border-left:2px solid grey">
                 <div class="col-xl-6 col-lg-9 col-md-12">
-                {{ form_row(form.skipReason) }}
-                {{ form_widget(form.skip) }}
+                    {{ form_row(form.skipReason) }}
+                    {{ form_row(form.comment) }}
+                    {{ form_widget(form.skip) }}
                 </div>
             </div>
 
