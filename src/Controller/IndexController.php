@@ -142,7 +142,7 @@ class IndexController extends AbstractController
                 $skipReason = $request->request->get("record")["skipReason"];
                 if ($skipReason == Record::SKIP_PHYSICAL_NEEDED) {
                     $session = $request->getSession();
-                    $session->getFlashBag()->add('success', "Cette notice ne sera plus proposée. Elle sera listée dans celle à reprendre document en main.");
+                    $session->getFlashBag()->add('success', "Cette notice ne sera plus proposée. Elle sera listée dans celles à reprendre document en main.");
                     $record->setStatus(Record::SKIP_PHYSICAL_NEEDED);
                 } else {
                     $record->setLocked(null);
