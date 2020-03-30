@@ -85,11 +85,17 @@ class HarvestRecordsCommand extends Command
         $countRecordCreated = 0;
 
         $ppnPaprikaAlreadySet = [];
+
+        $existingRecords = [];
         foreach ($lines as $line) {
             $error = preg_split("/\t/", $line);
             if (sizeof($error) > 1) {
                 $ppn = trim($error[0]);
-                $record = $this->em->getRepository(Record::class)->findOneBy(["ppn" => $ppn, "rcrCreate" => $rcr]);
+                if (isset($existingRecords[$ppn])) {
+                    $record = $existingRecords[$ppn];
+                } else {
+                    $record = $this->em->getRepository(Record::class)->findOneBy(["ppn" => $ppn, "rcrCreate" => $rcr]);
+                }
 
                 if ( (!is_null($record)) && ($record->getUrlCallType() != $urlCallType) ) {
                     $this->io->write(".");
@@ -110,8 +116,9 @@ class HarvestRecordsCommand extends Command
                         $record->setDocTypeLabel($error[7]);
 
                         $this->em->persist($record);
-                        $this->em->flush();
                     }
+
+                    $existingRecords[$ppn] = $record;
 
                     $errorObject = new LinkError();
                     $errorObject->setErrorText($error[3]);
@@ -130,7 +137,8 @@ class HarvestRecordsCommand extends Command
                             }
                         }
                     }
-                    $errorObject->setRecord($record);
+                    // $errorObject->setRecord($record);
+                    $record->addLinkError($errorObject);
                     $this->em->persist($errorObject);
                     $count++;
                 }
@@ -178,10 +186,8 @@ class HarvestRecordsCommand extends Command
             exit;
         }
 
-        print "Clean DATABASE !!!";
-        exit;
-        $this->emptyDatabase();
-        $this->cleanDatabaseFromURL2();
+        //$this->emptyDatabase();
+        //$this->cleanDatabaseFromURL2();
 
         $rcrs = $iln->getRcrs();
         $nbCalls = 0;
@@ -218,7 +224,7 @@ class HarvestRecordsCommand extends Command
             if ($nbCalls > 0) {
                 $sleep = rand(0, 10);
                 $this->io->writeln("Sleep for ".$sleep);
-                //sleep($sleep);
+                sleep($sleep);
             }
 
         }
