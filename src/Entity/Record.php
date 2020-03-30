@@ -17,6 +17,11 @@ class Record
     const SKIP_OTHER_REASON = 3;
 
     /**
+     * @ORM\Column(type="datetime", columnDefinition="DATETIME on update CURRENT_TIMESTAMP")
+     */
+    private $updatedAt;
+
+    /**
      * @ORM\Id()
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
