@@ -37,7 +37,7 @@ class IndexController extends AbstractController
     public function settings(Request $request)
     {
         $form = $this->createFormBuilder();
-        $session = new Session();
+        $session = $request->getSession();
         if ( ($session->has("winnie")) && ($session->get("winnie") == "1") )
         {
             $form = $form->add('winnie', CheckboxType::class,
@@ -70,9 +70,9 @@ class IndexController extends AbstractController
     /**
      * @Route("/ilns", name="view_all_ilns")
      */
-    public function ilns()
+    public function ilns(Request $request)
     {
-        $session = new Session();
+        $session = $request->getSession();
         if (!$session->has("winnie")) {
             return $this->redirect($this->generateUrl("settings"));
         }
@@ -86,20 +86,12 @@ class IndexController extends AbstractController
      */
     public function ilnView(Iln $iln)
     {
-        $rcrs = $this->getDoctrine()->getRepository(Rcr::class)->findByIln($iln);
-
-        return $this->render("iln.html.twig",
-            [
-                "iln" => $iln,
-                "rcrs" => $rcrs
-            ]
-        );
+        return $this->render("iln.html.twig", ["iln" => $iln]);
     }
 
-    private function getOneRecord(Rcr $rcr, ?string $ppn) {
-        return $record = $this->getDoctrine()->getRepository(Record::class)->findOneRandom($rcr);
+    private function getOneRecord(Request $request, Rcr $rcr, ?string $ppn) {
+        $session = $request->getSession();
         if (is_null($ppn)) {
-            $session = new Session();
             if ($session->get("winnie")) {
                 $record = $this->getDoctrine()->getRepository(Record::class)->findOneRandom($rcr);
             } else {
@@ -117,7 +109,7 @@ class IndexController extends AbstractController
      */
     public function rcrView(Iln $iln, Rcr $rcr, ?string $ppn, EntityManagerInterface $em, Request $request)
     {
-        $record = $this->getOneRecord($rcr, $ppn);
+        $record = $this->getOneRecord($request, $rcr, $ppn);
         // TODO : traiter base vide
         if (is_null($record)) {
             return $this->render("record.html.twig",
@@ -127,8 +119,6 @@ class IndexController extends AbstractController
                     "empty" => 1
                 ]
             );
-        } else {
-            dd($record);
         }
 
         $form = $this->createForm(RecordType::class, $record);
@@ -145,7 +135,7 @@ class IndexController extends AbstractController
                 $countCorrected = $em->getRepository(Record::class)->countCorrectedForRcr($record->getRcrCreate());
                 $record->getRcrCreate()->setNumberOfRecordsCorrected($countCorrected);
 
-                $session = new Session();
+                $session = $request->getSession();
                 $session->getFlashBag()->add('success', "Correction de la notice n°".$record->getPpn()." enregistrée, elle ne sera plus proposée par cette interface.");
 
             } else {

@@ -19,7 +19,7 @@
            <th>Libellé</th>
             <th>Nombre de notices disponibles</th>
         </tr>
-    {% for rcr in rcrs %}
+    {% for rcr in iln.getRcrs() %}
         <tr>
            <td>{{ rcr.code }}</td>
             <td><a href="{{  url('view_rcr', {ilnCode: iln.code, rcrCode: rcr.code}) }}">{{ rcr.label }}</a></td>

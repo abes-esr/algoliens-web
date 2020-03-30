@@ -45,7 +45,7 @@ class Rcr
     private $records;
 
     /**
-     * @ORM\Column(type="integer", nullable=true)
+     * @ORM\Column(type="integer", nullable=true, options={"default": 0})
      */
     private $numberOfRecords;
 
@@ -58,6 +58,11 @@ class Rcr
      * @ORM\Column(type="smallint")
      */
     private $harvested;
+
+    /**
+     * @ORM\Column(type="boolean", options={"default": 1})
+     */
+    private $active;
 
     public function __construct()
     {
@@ -190,6 +195,18 @@ class Rcr
     public function setHarvested(int $harvested): self
     {
         $this->harvested = $harvested;
+
+        return $this;
+    }
+
+    public function getActive(): ?bool
+    {
+        return $this->active;
+    }
+
+    public function setActive(bool $active): self
+    {
+        $this->active = $active;
 
         return $this;
     }

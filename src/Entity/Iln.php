@@ -89,7 +89,8 @@ class Iln
      */
     public function getRcrs(): Collection
     {
-        return $this->rcrs;
+        $output = $this->rcrs->filter(function($rcr) { return $rcr->getActive() == 1; });
+        return $output;
     }
 
     public function addRcr(Rcr $rcr): self
