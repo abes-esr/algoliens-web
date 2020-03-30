@@ -170,4 +170,13 @@ class IndexController extends AbstractController
             ]
         );
     }
+
+    /**
+     * @Route("/iln/{code}/stats", name="view_iln_stats")
+     */
+    public function ilnViewStats(Iln $iln)
+    {
+        $stats = $this->getDoctrine()->getRepository(Iln::class)->getStats($iln);
+        return $this->render("iln_stats.html.twig", ["iln" => $iln, "stats" => $stats]);
+    }
 }

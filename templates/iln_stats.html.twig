@@ -1,0 +1,29 @@
+{% extends "base.html.twig" %}
+{% block header %}
+    {% include "header_settings.html.twig" %}
+{% endblock %}
+
+{% block body %}
+    <h1>{{  iln.label }}</h1>
+    <h2>Statistiques</h2>
+    {% for year, yeardetail in stats %}
+        <h3>{{ year }}</h3>
+        <table class="table">
+        <tr>
+            <th>Jour</th>
+            <th>Notices corrigées</th>
+            <th>Notices à reprendre document en main</th>
+        </tr>
+        {% for month, monthdetail in yeardetail %}
+            {% for day, daydetail in monthdetail %}
+                <tr>
+                    <td>{{ day }}/{{ month }}</td>
+                    <td>{{ daydetail["1"] }}</td>
+                    <td>{{ daydetail["2"] }}</td>
+                </tr>
+            {% endfor %}
+        {% endfor %}
+        </table>
+    {% endfor %}
+
+{% endblock %}
