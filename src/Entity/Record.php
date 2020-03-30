@@ -13,6 +13,9 @@ use Doctrine\ORM\Mapping\Index;
  */
 class Record
 {
+    const SKIP_PHYSICAL_NEEDED = 2;
+    const SKIP_OTHER_REASON = 3;
+
     /**
      * @ORM\Id()
      * @ORM\GeneratedValue()

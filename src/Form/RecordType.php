@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\Record;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -27,6 +28,14 @@ class RecordType extends AbstractType
             ->add('urlCallType')
             ->add('winnie')
             ->add('rcrCreate')*/
+            ->add('skipReason', ChoiceType::class, [
+                'label' => "Notice non traitée pour le moment : ",
+                'choices'  => [
+                    'À reprendre document en main' => Record::SKIP_PHYSICAL_NEEDED,
+                    'Proposer à nouveau dans cette interface plus tard' => Record::SKIP_OTHER_REASON,
+                ],
+                'mapped' => false
+            ])
             ->add('id', HiddenType::class)
             ->add("validate", SubmitType::class,
                 [
@@ -37,12 +46,11 @@ class RecordType extends AbstractType
                 ])
             ->add("skip", SubmitType::class,
                 [
-                    'label' => "Je passe mon tour",
+                    'label' => "Enregistrer",
                     'attr' => [
-                        "class" => "btn btn-link"
+                        "class" => "btn btn-outline-success"
                     ]
                 ])
-        ;
         ;
     }
 
