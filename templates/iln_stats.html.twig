@@ -4,8 +4,7 @@
 {% endblock %}
 
 {% block body %}
-    <h1>{{  iln.label }}</h1>
-    <h2>Statistiques</h2>
+    {{ include("_breadcrumb.html.twig", {'page': 'stat'}) }}
     {% for year, yeardetail in stats %}
         <h3>{{ year }}</h3>
         <table class="table">
