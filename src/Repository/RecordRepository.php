@@ -84,6 +84,14 @@ class RecordRepository extends ServiceEntityRepository
         return $countResults;
     }
 
+    public function findRepriseNeeded(Rcr $rcr) {
+        return $this->createQueryBuilder('l')
+            ->where("l.comment != '' and l.rcrCreate = :rcr")
+            ->setParameter('rcr', $rcr)
+            ->getQuery()
+            ->getResult();
+    }
+
 
     // /**
     //  * @return Record[] Returns an array of Record objects

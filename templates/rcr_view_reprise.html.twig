@@ -1,0 +1,24 @@
+{% extends "base.html.twig" %}
+{% block header %}
+    {% include "header_settings.html.twig" %}
+{% endblock %}
+
+{% block body %}
+    {{ include("_breadcrumb.html.twig", {'page': 'reprise'}) }}
+    <table class="table">
+        <tr>
+            <th>PPN</th>
+            <th>Titre</th>
+            <th>Année</th>
+            <th>Note</th>
+        </tr>
+        {% for record in records %}
+            <tr>
+                <td>{{ record.ppn }}</td>
+                <td>{{ record.title }}</td>
+                <td>{{ record.year }}</td>
+                <td>{{ record.comment }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

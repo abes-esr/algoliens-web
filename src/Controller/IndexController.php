@@ -111,8 +111,7 @@ class IndexController extends AbstractController
     public function rcrViewReprise(Iln $iln, Rcr $rcr, EntityManagerInterface $em, Request $request)
     {
         $records = $this->getDoctrine()->getRepository(Record::class)->findRepriseNeeded($rcr);
-        dd($records);
-        return $this->render("rcr_view_reprise.html.twig", ["records" => $records]);
+        return $this->render("rcr_view_reprise.html.twig", ["iln" => $iln, "records" => $records]);
     }
 
 
