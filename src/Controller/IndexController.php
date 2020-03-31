@@ -102,6 +102,20 @@ class IndexController extends AbstractController
         }
         return $record;
     }
+
+    /**
+     * @Route("/iln/{ilnCode}/rcr/{rcrCode}/reprise", name="view_rcr_reprise")
+     * @Entity("iln", expr="repository.findOneBy({'code': ilnCode})")
+     * @Entity("rcr", expr="repository.findOneBy({'code': rcrCode})")
+     */
+    public function rcrViewReprise(Iln $iln, Rcr $rcr, EntityManagerInterface $em, Request $request)
+    {
+        $records = $this->getDoctrine()->getRepository(Record::class)->findRepriseNeeded($rcr);
+        dd($records);
+        return $this->render("rcr_view_reprise.html.twig", ["records" => $records]);
+    }
+
+
     /**
      * @Route("/iln/{ilnCode}/rcr/{rcrCode}/{ppn?}", name="view_rcr")
      * @Entity("iln", expr="repository.findOneBy({'code': ilnCode})")
@@ -109,21 +123,25 @@ class IndexController extends AbstractController
      */
     public function rcrView(Iln $iln, Rcr $rcr, ?string $ppn, EntityManagerInterface $em, Request $request)
     {
-        $record = $this->getOneRecord($request, $rcr, $ppn);
-        // TODO : traiter base vide
-        if (is_null($record)) {
-            // On essaie d'abord de libérer toutes les notices "lockées"
-            $this->getDoctrine()->getRepository(Record::class)->unlockRecords();
+        if ($request->getMethod() == "GET") {
             $record = $this->getOneRecord($request, $rcr, $ppn);
+            // TODO : traiter base vide
             if (is_null($record)) {
-                return $this->render("record.html.twig",
-                    [
-                        "iln" => $iln,
-                        "rcr" => $rcr,
-                        "empty" => 1
-                    ]
-                );
+                // On essaie d'abord de libérer toutes les notices "lockées"
+                $this->getDoctrine()->getRepository(Record::class)->unlockRecords();
+                $record = $this->getOneRecord($request, $rcr, $ppn);
+                if (is_null($record)) {
+                    return $this->render("record.html.twig",
+                        [
+                            "iln" => $iln,
+                            "rcr" => $rcr,
+                            "empty" => 1
+                        ]
+                    );
+                }
             }
+        } else {
+            $record = new Record();
         }
 
         $form = $this->createForm(RecordType::class, $record);
@@ -154,7 +172,6 @@ class IndexController extends AbstractController
                     $record->setLocked(null);
                 }
             }
-
             $em->persist($record);
             $em->flush();
 
