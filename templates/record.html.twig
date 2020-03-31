@@ -49,6 +49,7 @@
             {% endif %}
 
             <p>
+        <p>Type de document : <span class="badge badge-info">{{ record.docTypeLabel }}</span></p>
                 La notice n°<a target="_blank" href="http://www.sudoc.fr/{{ record.ppn }}">{{ record.ppn }}</a> vous est proposée car
                 {% if record.getUrlCallType() == 1 %}
                     le RCR {{ rcr.code }} en est le créateur
