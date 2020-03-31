@@ -40,21 +40,22 @@ class RecordType extends AbstractType
             ->add('id', HiddenType::class)
             ->add("validate", SubmitType::class,
                 [
-                    'label' => "Notice corrigée via WinibW ou Paprika !",
+                    'label' => "Enregistrer la correction",
                     "attr" => [
                         "class" => "btn btn-success"
                     ]
                 ])
             ->add("skip", SubmitType::class,
                 [
-                    'label' => "Enregistrer",
+                    'label' => "Enregistrer la reprise nécessaire",
                     'attr' => [
-                        "class" => "btn btn-outline-success"
+                        "class" => "btn btn-success"
                     ]
                 ])
             ->add("comment", TextareaType::class,
                 [
-                    'label' => "Commentaire"
+                    'label' => "Commentaire",
+                    'required' => false
                 ]
             )
         ;

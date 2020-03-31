@@ -38,49 +38,54 @@
             Peut-être un <a href="{{ url('view_iln', {'code': iln.code}) }}">autre RCR de cet ILN</a> ?
         </div>
     {% else %}
-
-            <h2 id="record_title">Notice {{ record.ppn }}</h2>
-            <div id="unloca"></div>
-            {% if record.comment != "" %}
-                <div class="alert alert-warning">
-                Cette notice a déjà été proposé à un·e collègue qui l'a passée avec le commentaire suivant : <br/>
-                    <i>{{ record.comment }}</i>
-                </div>
+        <div class="row">
+            <div class="col-12">
+                <h2 id="record_title">Notice {{ record.ppn }}</h2>
+                <div id="unloca"></div>
+                {% if record.comment != "" %}
+                    <div class="alert alert-warning">
+                    Cette notice a déjà été proposé à un·e collègue qui l'a passée avec le commentaire suivant : <br/>
+                        <i>{{ record.comment }}</i>
+                    </div>
+                {% endif %}
+        <p>Information sur le document : <span class="badge badge-info">{{ record.docTypeLabel }}</span>
+            {% if record.getUrlCallType() == 1 %}
+                <span class="badge badge-primary">RCR CRÉATEUR</span>
+            {% else %}
+                <span class="badge badge-primary">UNICA</span>
             {% endif %}
-
-            <p>
-        <p>Type de document : <span class="badge badge-info">{{ record.docTypeLabel }}</span></p>
-                La notice n°<a target="_blank" href="http://www.sudoc.fr/{{ record.ppn }}">{{ record.ppn }}</a> vous est proposée car
+        </p>
+                <p>
+                    La notice n°<a target="_blank" href="http://www.sudoc.fr/{{ record.ppn }}">{{ record.ppn }}</a> vous est proposée car
                 {% if record.getUrlCallType() == 1 %}
                     le RCR {{ rcr.code }} en est le créateur
                 {% else %}
                     le RCR {{ rcr.code }} est le seul établissement du réseau localisé dessus
                 {% endif %}
-                et qu'elle comporte les erreurs suivantes :
+                    et qu'elle comporte les erreurs suivantes :</p>
                 <ul>
                 {% for linkError in record.linkErrors %}
                     <li><strong>{{ linkError.errorCode }}</strong> : au moins {{ linkError.errorText }};</li>
                 {% endfor %}
                 </ul>
-        <div>
-            <a href="#" id="btn_unimarc" class="btn btn-info">Afficher la notice unimarc</a>
-            <div id="sudoc_record" class="collapse">
-                <div class="lds-ellipsis">
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                    <div></div>
+                <a href="#" id="btn_unimarc" class="btn btn-info">Afficher la notice unimarc</a>
+                <div id="sudoc_record" class="collapse">
+                    <div class="lds-ellipsis">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                    </div>
                 </div>
-            </div>
+           </div>
         </div>
 
             <div class="row">
                 <div class="col-12">
-                    <hr/>
-                    <h2>Actions à mener</h2>
-                    <p>
+                    <h2>Problèmes identifiés</h2>
+
                     {% if app.session.get("winnie") %}
-                        Corriger la notice sur WinIBW<br/>
+                        <p>Corriger la notice sur WinIBW</p>
                     {% endif %}
                         {% set countLinks = 0 %}
                         {% for linkError in record.linkErrors %}
@@ -105,30 +110,27 @@
                         {% if countLinks == 1 %}
                             </ul>
                             {% endif %}
-                    </p>
                 </div>
             </div>
-        </div>
 
+        <div class="row">
+            <div class="col-12">
+            <h2>Décision</h2>
+            </div>
+        </div>
         {{ form_start(form) }}
         <div class="row">
-
-            <div class="col-sm text-right">
+            <div class="col-6 text-right">
+                <h3>Option 1 : notice corrigée</h3>
+                <p>La notice a été corrigée dans WinIBW ou Paprika, ne plus la proposer aux collègues.</p>
                 {{ form_widget(form.validate) }}
-                <p>
-                    <small>
-                        Plus la peine de la proposer aux collègues
-                    </small>
-                </p>
             </div>
-            <div class="col-sm text-left" style="border-left:2px solid grey">
-                <div class="col-xl-6 col-lg-9 col-md-12">
+            <div class="col-6 text-left" style="border-left:2px solid grey">
+                <h3>Option 2 : notice à reprendre</h3>
                     {{ form_row(form.skipReason) }}
                     {{ form_row(form.comment) }}
                     {{ form_widget(form.skip) }}
-                </div>
             </div>
-
         </div>
         {{ form_end(form) }}
     {% endif %}
