@@ -112,13 +112,18 @@ class IndexController extends AbstractController
         $record = $this->getOneRecord($request, $rcr, $ppn);
         // TODO : traiter base vide
         if (is_null($record)) {
-            return $this->render("record.html.twig",
-                [
-                    "iln" => $iln,
-                    "rcr" => $rcr,
-                    "empty" => 1
-                ]
-            );
+            // On essaie d'abord de libérer toutes les notices "lockées"
+            $this->getDoctrine()->getRepository(Record::class)->unlockRecords();
+            $record = $this->getOneRecord($request, $rcr, $ppn);
+            if (is_null($record)) {
+                return $this->render("record.html.twig",
+                    [
+                        "iln" => $iln,
+                        "rcr" => $rcr,
+                        "empty" => 1
+                    ]
+                );
+            }
         }
 
         $form = $this->createForm(RecordType::class, $record);
