@@ -8,17 +8,18 @@ use App\Entity\PaprikaLink;
 use App\Entity\Rcr;
 use App\Entity\Record;
 use Doctrine\ORM\EntityManagerInterface;
-use PhpOffice\PhpSpreadsheet\Shared\Date;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Helper\Helper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\ChoiceQuestion;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Finder\Finder;
 use Symfony\Component\HttpClient\HttpClient;
 
-define("URL_RCR_LOCA"
-    , 1);
+define("URL_RCR_LOCA", 1);
 define("URL_RCR_CREA", 2);
 
 class HarvestRecordsCommand extends Command
@@ -38,8 +39,9 @@ class HarvestRecordsCommand extends Command
     {
         $this
             ->setDescription('download all records')
-            ->addArgument('arg1', InputArgument::OPTIONAL, 'Argument description')
-            ->addOption('option1', null, InputOption::VALUE_NONE, 'Option description')
+            ->addOption('iln', null, InputOption::VALUE_REQUIRED, "Code de l'ILN")
+            ->addOption('clean-database', null, InputOption::VALUE_NONE, "Nettoyage de la base de données avant import")
+            ->addOption('rcr-from-file', null, InputOption::VALUE_REQUIRED, "Le code d'un RCR que l'on souhaite charger depuis un fichier")
         ;
     }
 
@@ -68,6 +70,84 @@ class HarvestRecordsCommand extends Command
 
     }
 
+    private function processLine(array &$existingRecords, &$countRecordsCreated, &$ppnPaprikaAlreadySet, Rcr $rcr, $line, $urlCallType) {
+        $error = preg_split("/\t/", $line);
+        if (sizeof($error) > 1) {
+            $ppn = trim($error[0]);
+            if (isset($existingRecords[$ppn])) {
+                $record = $existingRecords[$ppn];
+            } else {
+                $record = $this->em->getRepository(Record::class)->findOneBy(["ppn" => $ppn, "rcrCreate" => $rcr]);
+            }
+
+            if ( (!is_null($record)) && ($record->getUrlCallType() != $urlCallType) ) {
+                $this->io->write(".");
+            } else
+            {
+                if (is_null($record)) {
+                    $countRecordsCreated++;
+                    $record = new Record();
+                    $record->setPpn($ppn);
+                    $record->setRcrCreate($rcr);
+                    $record->setUrlCallType($urlCallType);
+
+                    $date = trim($error[4]);
+                    $date = \DateTime::createFromFormat('Y-m-j H:i:s', $date );
+                    $record->setLastUpdate($date);
+                    $record->setStatus(0);
+                    $record->setDocTypeCode($error[6]);
+                    $record->setDocTypeLabel($error[7]);
+
+                    $this->em->persist($record);
+                }
+
+                $existingRecords[$ppn] = $record;
+
+                $errorObject = new LinkError();
+                $errorObject->setErrorText($error[3]);
+                $errorObject->setErrorCode($error[5]);
+                $paprikaUrl = trim($error[8]);
+                if ($paprikaUrl) {
+                    if (!isset($ppnPaprikaAlreadySet[$ppn])) {
+                        $ppnPaprikaAlreadySet[$ppn] = 1;
+
+                        $paprikaUrls = preg_split("/#/", $paprikaUrl);
+                        foreach ($paprikaUrls as $tmpUrl) {
+                            $paprikaLink = new PaprikaLink();
+                            $paprikaLink->setUrl($tmpUrl);
+                            $this->em->persist($paprikaLink);
+                            $errorObject->addPaprikaLink($paprikaLink);
+                        }
+                    }
+                }
+                // $errorObject->setRecord($record);
+                $record->addLinkError($errorObject);
+                $this->em->persist($errorObject);
+            }
+        }
+    }
+
+    private function processContent(Rcr $rcr, $urlCallType, $content) {
+        $lines = preg_split("/\n/", $content);
+        $lines = array_slice($lines, 3);
+
+        $countRecordsCreated = 0;
+
+        $ppnPaprikaAlreadySet = [];
+
+        $existingRecords = [];
+        $count = 0;
+        foreach ($lines as $line) {
+            $count += 1;
+            $this->processLine($existingRecords, $countRecordsCreated, $ppnPaprikaAlreadySet, $rcr, $line, $urlCallType);
+        }
+
+        $rcr->setNumberOfRecords($countRecordsCreated);
+        $this->em->persist($rcr);
+        $this->em->flush();
+        $this->io->writeln(sprintf("<info>%s erreurs importées / %s notices créées</info>", $count, $countRecordsCreated));
+    }
+
     private function processUrl(Rcr $rcr, string $url, int $urlCallType) {
         $startRcr = microtime(true);
         $this->io->writeln("WS : ".$url);
@@ -78,77 +158,8 @@ class HarvestRecordsCommand extends Command
         }
         $this->io->writeln("WS : fin (".(microtime(true) - $start).")");
 
-        $lines = preg_split("/\n/", $content);
-        $lines = array_slice($lines, 3);
-
-        $count = 0;
-        $countRecordCreated = 0;
-
-        $ppnPaprikaAlreadySet = [];
-
-        $existingRecords = [];
-        foreach ($lines as $line) {
-            $error = preg_split("/\t/", $line);
-            if (sizeof($error) > 1) {
-                $ppn = trim($error[0]);
-                if (isset($existingRecords[$ppn])) {
-                    $record = $existingRecords[$ppn];
-                } else {
-                    $record = $this->em->getRepository(Record::class)->findOneBy(["ppn" => $ppn, "rcrCreate" => $rcr]);
-                }
-
-                if ( (!is_null($record)) && ($record->getUrlCallType() != $urlCallType) ) {
-                    $this->io->write(".");
-                } else
-                {
-                    if (is_null($record)) {
-                        $countRecordCreated++;
-                        $record = new Record();
-                        $record->setPpn($ppn);
-                        $record->setRcrCreate($rcr);
-                        $record->setUrlCallType($urlCallType);
-
-                        $date = trim($error[4]);
-                        $date = \DateTime::createFromFormat('Y-m-j H:i:s', $date );
-                        $record->setLastUpdate($date);
-                        $record->setStatus(0);
-                        $record->setDocTypeCode($error[6]);
-                        $record->setDocTypeLabel($error[7]);
-
-                        $this->em->persist($record);
-                    }
-
-                    $existingRecords[$ppn] = $record;
-
-                    $errorObject = new LinkError();
-                    $errorObject->setErrorText($error[3]);
-                    $errorObject->setErrorCode($error[5]);
-                    $paprikaUrl = trim($error[8]);
-                    if ($paprikaUrl) {
-                        if (!isset($ppnPaprikaAlreadySet[$ppn])) {
-                            $ppnPaprikaAlreadySet[$ppn] = 1;
-
-                            $paprikaUrls = preg_split("/#/", $paprikaUrl);
-                            foreach ($paprikaUrls as $tmpUrl) {
-                                $paprikaLink = new PaprikaLink();
-                                $paprikaLink->setUrl($tmpUrl);
-                                $this->em->persist($paprikaLink);
-                                $errorObject->addPaprikaLink($paprikaLink);
-                            }
-                        }
-                    }
-                    // $errorObject->setRecord($record);
-                    $record->addLinkError($errorObject);
-                    $this->em->persist($errorObject);
-                    $count++;
-                }
-            }
-        }
-
-        $rcr->setNumberOfRecords($countRecordCreated);
-        $this->em->persist($rcr);
-        $this->em->flush();
-        $this->io->writeln(sprintf("\n<info>%s erreurs importées / %s notices créées</info> (durée totale : %s)", $count, $countRecordCreated, (microtime(true) - $startRcr)));
+        $this->processContent($rcr, $urlCallType, $content);
+        $this->io->writeln(sprintf("<info>Durée de traitement </info> : %s",  (microtime(true) - $startRcr)));
     }
 
     protected function cleanDatabaseFromURL2() {
@@ -170,11 +181,30 @@ class HarvestRecordsCommand extends Command
         $this->em->getConnection()->exec("SET FOREIGN_KEY_CHECKS = 1;");
     }
 
+    private function getWsFilename(Helper $helper, InputInterface $input, OutputInterface $output) {
+        $finder = new Finder();
+        $directory_files = "ws_files";
+        $finder->files()->in($directory_files );
+        $choices = [];
+        foreach ($finder as $file) {
+            $choices[] = $directory_files."/".$file->getFilename();
+        }
+
+        $question = new ChoiceQuestion(
+            "Choisir le fichier contenant les résultats du WS Algoliens",
+            $choices
+        );
+        $question->setErrorMessage('Fichier invalide.');
+
+        $filename = $helper->ask($input, $output, $question);
+        return $filename;
+    }
+
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->io = new SymfonyStyle($input, $output);
 
-        $ilnNumber = $input->getArgument('arg1');
+        $ilnNumber = $input->getOption('iln');
         if (!$ilnNumber) {
             $this->io->error("Manque le code de l'ILN en argument");
             exit;
@@ -186,49 +216,67 @@ class HarvestRecordsCommand extends Command
             exit;
         }
 
-        //$this->emptyDatabase();
-        //$this->cleanDatabaseFromURL2();
+        $cleandb = $input->getOption('clean-database');
+        $helper = $this->getHelper('question');
 
-        $rcrs = $iln->getRcrs();
-        $nbCalls = 0;
-        foreach ($rcrs as $rcr) {
-            // $rcr = $this->em->getRepository(Rcr::class)->findOneBy(["code" => '243222202']);
-            $this->io->title("Traitement RCR : ".$rcr->getCode()." - ".$rcr->getLabel());
-            if ($rcr->getHarvested() == 2) {
-                $this->io->writeln("<info>URL 1 & 2 OK</info>");
-            } else {
-                if ($rcr->getHarvested() == 1) {
-                    $this->io->writeln("<info>URL 1 ok</info>");
+        if ($cleandb) {
+            $question = new ConfirmationQuestion("Êtes-vous sûr·e de vouloir vider la base de données avant import ?\n", false);
+
+            if (!$helper->ask($input, $output, $question)) {
+                $this->io->error("Fin de traitement en l'absence de validation");
+                exit;
+            }
+            $this->emptyDatabase();
+            $this->cleanDatabaseFromURL2();
+        }
+
+        $rcrFromFile = $input->getOption('rcr-from-file');
+        if ($rcrFromFile) {
+            $rcr = $this->em->getRepository(Rcr::class)->findOneBy(["code" => $rcrFromFile]);
+            $this->io->title("Chargement spécifique pour ".$rcr->getLabel()." (".$rcr->getCode().")");
+            $filename = $this->getWsFilename($helper, $input, $output);
+            $content = file_get_contents($filename);
+            $this->processContent($rcr, 2, $content);
+        } else {
+            $rcrs = $iln->getRcrs();
+            $nbCalls = 0;
+            foreach ($rcrs as $rcr) {
+                $this->io->title("Traitement RCR : ".$rcr->getCode()." - ".$rcr->getLabel());
+                if ($rcr->getHarvested() == 2) {
+                    $this->io->writeln("<info>URL 1 & 2 OK</info>");
                 } else {
-                    // URL_RCR_CREA
-                    $url = sprintf("https://www.idref.fr/AlgoLiens?rcr=%s&paprika=1", $rcr->getCode());
-                    $this->processUrl($rcr, $url, URL_RCR_CREA);
+                    if ($rcr->getHarvested() == 1) {
+                        $this->io->writeln("<info>URL 1 ok</info>");
+                    } else {
+                        // URL_RCR_CREA
+                        $url = sprintf("https://www.idref.fr/AlgoLiens?rcr=%s&paprika=1", $rcr->getCode());
+                        $this->processUrl($rcr, $url, URL_RCR_CREA);
+                        $nbCalls++;
+                        $rcr->setHarvested(1);
+                        $this->em->persist($rcr);
+                        $this->em->flush();
+                    }
+
+                    $this->io->writeln("");
+
+                    $url = sprintf("https://www.idref.fr/AlgoLiens?localisationRcr=%s&unica=localisationRcr&paprika=1", $rcr->getCode());
+                    $this->processUrl($rcr, $url, URL_RCR_LOCA);
                     $nbCalls++;
-                    $rcr->setHarvested(1);
+                    $this->io->writeln("");
+                    $rcr->setHarvested(2);
                     $this->em->persist($rcr);
                     $this->em->flush();
                 }
 
-                $this->io->writeln("");
+                // repos de 10 secondes pour laisser le serveur tranquille
+                if ($nbCalls > 0) {
+                    $sleep = rand(0, 10);
+                    $this->io->writeln("Sleep for ".$sleep);
+                    sleep($sleep);
+                }
 
-                $url = sprintf("https://www.idref.fr/AlgoLiens?localisationRcr=%s&unica=localisationRcr&paprika=1", $rcr->getCode());
-                $this->processUrl($rcr, $url, URL_RCR_LOCA);
-                $nbCalls++;
-                $this->io->writeln("");
-                $rcr->setHarvested(2);
-                $this->em->persist($rcr);
-                $this->em->flush();
             }
-
-            // repos de 10 secondes pour laisser le serveur tranquille
-            if ($nbCalls > 0) {
-                $sleep = rand(0, 10);
-                $this->io->writeln("Sleep for ".$sleep);
-                sleep($sleep);
-            }
-
         }
-
 
         $this->io->success('Harvesting terminé avec succès !');
 
