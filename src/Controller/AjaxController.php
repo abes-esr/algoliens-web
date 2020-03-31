@@ -21,6 +21,8 @@ class AjaxController extends AbstractController
         $record = new \SimpleXMLElement($xml);
         $unimarc = "";
         $title = "";
+        $year = "";
+
         foreach ($record->datafield as $datafield) {
             $tag = (string) $datafield->attributes()["tag"][0];
             $unimarc .= $tag." ";
@@ -28,9 +30,17 @@ class AjaxController extends AbstractController
                 $code = (string) $subfield->attributes()["code"][0];
                 $value = (string) $subfield;
 
-                if ( ($tag == 200) && ($code == "a") ) {
+                if ( ($tag == 100) && ($code == "a") ) {
+                    $year = substr($value, 9,4);
+                } elseif ( ($tag == 200) && ($code == "a") ) {
                     $title = $value;
                 }
+                elseif ( ($tag == 210) && ($code == "d") ) {
+                    if ($year == '') {
+                        $year = $value;
+                    }
+                }
+
                 $unimarc .= "$$code $value ";
             }
             $unimarc .= "\n";
@@ -40,11 +50,15 @@ class AjaxController extends AbstractController
         $records = $this->getDoctrine()->getRepository(Record::class)->findBy(["ppn" => $ppn]);
         foreach ($records as $record) {
             $record->setMarcBefore($unimarc);
+            $record->setTitle($title);
+            $record->setYear($year);
             $em->persist($record);
         }
         $em->flush();
 
         return new JsonResponse([
+            "ppn" => $ppn,
+            "year" => $year,
             "title" => $title,
             "unimarc_record" => "<pre>$unimarc</pre>"
         ]);

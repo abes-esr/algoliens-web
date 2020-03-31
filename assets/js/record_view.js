@@ -3,7 +3,7 @@ $( document ).ready(function() {
     $.getJSON( url_raw_record, function( response ) {
         $("#sudoc_record").html(response["unimarc_record"] );
         if (response["title"] != "") {
-            $("#record_title").append(" - <i>"  + response["title"] + "</i>");
+            $("#record_title").append(" - <i>"  + response["title"] + "</i> (" + response["year"] + ")");
         }
     });
 
