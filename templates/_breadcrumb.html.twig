@@ -5,6 +5,7 @@
         {% if rcr is defined %}
             <li class="breadcrumb-item"><a href="{{ url('view_rcr', {'ilnCode': iln.code, 'rcrCode': rcr.code}) }}">{{ rcr.label }}</a></li>
         {% endif %}
+
         {% if page == "record" %}
             {% if not empty %}
                 <li class="breadcrumb-item active" aria-current="page">Notice n°{{ record.ppn }}</li>
@@ -13,6 +14,8 @@
             <li class="breadcrumb-item active" aria-current="page">Statistiques</li>
         {% elseif page == "reprise" %}
             <li class="breadcrumb-item active" aria-current="page">Notices à reprendre document en main</li>
+        {% elseif page == "iln" %}
+            <li class="breadcrumb-item active" aria-current="page">Sélection d'un RCR</li>
         {% endif %}
 
     </ol>

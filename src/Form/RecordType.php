@@ -47,7 +47,7 @@ class RecordType extends AbstractType
                 ])
             ->add("skip", SubmitType::class,
                 [
-                    'label' => "Enregistrer la reprise nécessaire",
+                    'label' => "Enregistrer l'état « reprise nécessaire »",
                     'attr' => [
                         "class" => "btn btn-success"
                     ]

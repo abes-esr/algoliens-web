@@ -1,7 +1,4 @@
 {% extends "base.html.twig" %}
-{% block header %}
-    {% include "header_settings.html.twig" %}
-{% endblock %}
 {% block javascripts %}
     {% if not empty %}
     <script type="text/javascript">
@@ -73,7 +70,7 @@
 
             <div class="row">
                 <div class="col-12">
-                    <h2>Problèmes identifiés</h2>
+                    <h2>Actions suggérées</h2>
 
                     {% if app.session.get("winnie") %}
                         <p>Corriger la notice sur WinIBW</p>
@@ -106,7 +103,7 @@
 
         <div class="row">
             <div class="col-12">
-            <h2>Décision</h2>
+            <h2>Enregistrer</h2>
             </div>
         </div>
         {{ form_start(form) }}

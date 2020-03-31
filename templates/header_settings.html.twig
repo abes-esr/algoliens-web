@@ -1,11 +1,14 @@
 <div class="row">
-    <div class="col text-right small">
-        Winibw disponible sur mon poste :
-        {% if app.session.get("winnie") %}
-            <span class="text-success">&#10004; </span>
+    <div class="col small">
+        {% if not app.session.has("winnie") %}
         {% else %}
-            <span class="text-danger">&#10060; </span>
+            Winibw disponible sur mon poste :
+            {% if app.session.get("winnie") %}
+                <span class="text-success">&#10004; </span>
+            {% else %}
+                <span class="text-danger">&#10060; </span>
+            {% endif %}
+            (<a href="{{ url("settings") }}">modifier</a>)
         {% endif %}
-        (<a href="{{ url("settings") }}">modifier</a>)
     </div>
 </div>

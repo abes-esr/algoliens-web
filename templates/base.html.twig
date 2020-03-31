@@ -7,12 +7,14 @@
         {% block stylesheets %}{% endblock %}
     </head>
     <body class="d-flex flex-column h-100">
-        <div class="container">
-            <div class="row">
-                <div class="col-sm">
-                    <a href="{{ url("home") }}">WebAlgoLiens</a>
-                </div>
-            </div>
+
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom box-shadow">
+            <h1 class="my-0 mr-md-auto font-weight-normal"><a href="{{ url("home") }}">Algoliens web</a></h1>
+            <nav class="my-2 my-md-0 mr-md-3">
+                {% include "header_settings.html.twig" %}
+            </nav>
+        </div>
             {% block header %}
             {% endblock %}
 
@@ -21,7 +23,7 @@
                     <div class="alert alert-{{ label }}">{{ message }}</div>
                 {% endfor %}
             {% endfor %}
-            <hr/>
+
             {% block body %}{% endblock %}
             <!-- {% include 'footer.html.twig' %} -->
         </div>
