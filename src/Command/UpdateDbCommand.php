@@ -34,8 +34,8 @@ class UpdateDbCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $this->em->getConnection()->exec("UPDATE `rcr` set number_of_records = (select count(*) from record where record.rcr_create_id = rcr.id)");
         $this->em->getConnection()->exec("UPDATE `rcr` set number_of_records_corrected = (select count(*) from record where record.rcr_create_id = rcr.id and status != 0)");
-        $this->em->getConnection()->exec("UPDATE `record` set winnie = 0;");
-        $this->em->getConnection()->exec("UPDATE `record` set winnie = 1 where id in (select record_id from link_error where id not in (select link_error_id from paprika_link))");
+        $this->em->getConnection()->exec("UPDATE `record` set winnie = 0 where status = 0;");
+        $this->em->getConnection()->exec("UPDATE `record` set winnie = 1 where status = 0 and id in (select record_id from link_error where id not in (select link_error_id from paprika_link))");
         return 1;
     }
 }
