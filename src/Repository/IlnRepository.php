@@ -26,7 +26,7 @@ class IlnRepository extends ServiceEntityRepository
 
         // Pour faire la disctinction par RCR, non utilisé pour le moment;
         $sql = "SELECT rcr_create_id, DATE_FORMAT(updated_at, '%Y') as year, DATE_FORMAT(updated_at, '%m') as month, DAYOFMONTH(updated_at) as day, status, count(*) as nbrecords FROM `record` where status in (1, 2) and rcr_create_id in (select id from rcr where rcr.iln_id = ?) group by rcr_create_id, year, month, day, status";
-        $sql = "SELECT rcr_create_id, DATE_FORMAT(updated_at, '%Y') as year, DATE_FORMAT(updated_at, '%m') as month, DAYOFMONTH(updated_at) as day, status, count(*) as nbrecords FROM `record` where status in (1, 2) and rcr_create_id in (select id from rcr where rcr.iln_id = ?) group by rcr_create_id, year, month, day, status";
+        $sql = "SELECT rcr_create_id, DATE_FORMAT(updated_at, '%Y') as year, DATE_FORMAT(updated_at, '%m') as month, DAYOFMONTH(updated_at) as day, status, count(*) as nbrecords FROM `record` where status in (1, 2) and rcr_create_id in (select id from rcr where rcr.iln_id = ?) group by rcr_create_id, DATE_FORMAT(updated_at, '%Y'), month, day, status";
 
         $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
         $stmt->bindValue(1, $iln->getId());
