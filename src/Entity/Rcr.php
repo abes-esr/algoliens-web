@@ -187,15 +187,16 @@ class Rcr
         return $this;
     }
 
-    public function updateNumberOfRecordsCorrection() {
-        $countCorrected = $em->getRepository(Record::class)->countCorrectedForRcr($record->getRcrCreate());
-        $record->getRcrCreate()->setNumberOfRecordsCorrected($countCorrected);
-    }
-
     public function getNumberOfRecordsAvailable(): ?int
     {
         return ($this->getNumberOfRecords() - $this->getNumberOfRecordsCorrected() - $this->getNumberOfRecordsReprise());
     }
+
+    public function getNumberOfRecordsHandled(): ?int
+    {
+        return ($this->getNumberOfRecordsCorrected() + $this->getNumberOfRecordsReprise());
+    }
+
 
     public function getHarvested(): ?int
     {

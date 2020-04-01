@@ -11,7 +11,7 @@
             <li>passer votre tour → cette notice pourra être proposée à nouveau à l'avenir</li>
         </ul>
         <p>
-            {{ iln.getNumberOfRecordsCorrected }} notices traitées jusqu'ici pour cet ILN.
+            {{ iln.getNumberOfRecordsHandled }} notices traitées jusqu'ici pour cet ILN (<a href="{{ url("view_iln_stats", {'code': iln.code}) }}">détail</a>).
         </p>
     </div>
     <table class="table">

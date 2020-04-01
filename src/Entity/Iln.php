@@ -123,4 +123,9 @@ class Iln
     public function getNumberOfRecordsCorrected() {
         return array_reduce($this->getRcrs()->getValues(), function ($total, $rcr) { $total += $rcr->getNumberOfRecordsCorrected(); return $total; });
     }
+
+    public function getNumberOfRecordsHandled() {
+        return array_reduce($this->getRcrs()->getValues(), function ($total, $rcr) { $total += $rcr->getNumberOfRecordsHandled(); return $total; });
+    }
+
 }
