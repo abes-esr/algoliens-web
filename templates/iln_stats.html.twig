@@ -5,6 +5,8 @@
 {% block body %}
     {{ include("_breadcrumb.html.twig", {'page': 'stat'}) }}
     {% for year, yeardetail in stats %}
+        {% set corrected = 0 %}
+        {% set reprise = 0 %}
         <h3>{{ year }}</h3>
         <table class="table">
         <tr>
@@ -14,6 +16,8 @@
         </tr>
         {% for month, monthdetail in yeardetail %}
             {% for day, daydetail in monthdetail %}
+                {% set corrected = corrected + daydetail["1"] %}
+                {% set reprise = reprise + daydetail["2"] %}
                 <tr>
                     <td>{{ day }}/{{ month }}</td>
                     <td>{{ daydetail["1"] }}</td>
@@ -21,6 +25,11 @@
                 </tr>
             {% endfor %}
         {% endfor %}
+            <tr>
+                <th>Total</th>
+                <th>{{ corrected }}</th>
+                <th>{{ reprise }}</th>
+            </tr>
         </table>
     {% endfor %}
 
