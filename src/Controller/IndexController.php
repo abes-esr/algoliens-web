@@ -166,39 +166,55 @@ class IndexController extends AbstractController
 
         $form = $this->createForm(RecordType::class, $record);
         $form->handleRequest($request);
-        if ($form->isSubmitted() && $form->isValid()) {
+
+        if ($form->isSubmitted()) {
             $submitButton = $form->getClickedButton();
             $recordForm = $form->getData();
             $id = $recordForm->getId();
             $record = $this->getDoctrine()->getRepository(Record::class)->find($id);
 
-            if ($submitButton->getName() == "validate") {
-                // On va mettre à jour
-                $record->setStatus(1);
-                $session = $request->getSession();
-                $session->getFlashBag()->add('success', "Correction de la notice n°".$record->getPpn()." enregistrée, elle ne sera plus proposée par cette interface.");
-                // On ajoute 1 pour tenir compte de la notice en cours
-                $countCorrected = 1 + $em->getRepository(Record::class)->countCorrectedForRcr($record->getRcrCreate());
-                $record->getRcrCreate()->setNumberOfRecordsCorrected($countCorrected);
-            } elseif ($submitButton->getName() == "skip") {
-                $skipReason = $request->request->get("record")["skipReason"];
-                if ($skipReason == Record::SKIP_PHYSICAL_NEEDED) {
+            if ($form->isValid()) {
+                if ($submitButton->getName() == "validate") {
+                    // On va mettre à jour
+                    $record->setStatus(1);
                     $session = $request->getSession();
-                    $session->getFlashBag()->add('success', "Cette notice ne sera plus proposée. Elle sera listée dans celles à reprendre document en main.");
-                    $record->setStatus(Record::SKIP_PHYSICAL_NEEDED);
-                    $record->setComment($recordForm->getComment());
+                    $session->getFlashBag()->add('success', "Correction de la notice n°".$record->getPpn()." enregistrée, elle ne sera plus proposée par cette interface.");
                     // On ajoute 1 pour tenir compte de la notice en cours
-                    $countReprise = 1 + $em->getRepository(Record::class)->countRepriseForRcr($record->getRcrCreate());
-                    $record->getRcrCreate()->setNumberOfRecordsReprise($countReprise);
-                } else {
-                    $record->setLocked(null);
+                    $countCorrected = 1 + $em->getRepository(Record::class)->countCorrectedForRcr($record->getRcrCreate());
+                    $record->getRcrCreate()->setNumberOfRecordsCorrected($countCorrected);
+                } elseif ($submitButton->getName() == "skip") {
+                    $skipReason = $request->request->get("record")["skipReason"];
+                    if ($skipReason == Record::SKIP_PHYSICAL_NEEDED) {
+                        $session = $request->getSession();
+                        $session->getFlashBag()->add('success', "Cette notice ne sera plus proposée. Elle sera listée dans celles à reprendre document en main.");
+                        $record->setStatus(Record::SKIP_PHYSICAL_NEEDED);
+                        $record->setComment($recordForm->getComment());
+                        // On ajoute 1 pour tenir compte de la notice en cours
+                        $countReprise = 1 + $em->getRepository(Record::class)->countRepriseForRcr($record->getRcrCreate());
+                        $record->getRcrCreate()->setNumberOfRecordsReprise($countReprise);
+                    } else {
+                        $record->setLocked(null);
+                    }
                 }
+
+                $em->persist($record);
+                $em->flush();
+
+                return $this->redirect($this->generateUrl("view_rcr", ['ilnCode' => $iln->getCode(), 'rcrCode' => $rcr->getCode()]));
+            } else {
+                $session = $request->getSession();
+                $session->getFlashBag()->add('danger', "<strong>Attention</strong> : l'enregistrement du formulaire a provoqué une erreur (<i>Timeout</i>). Merci de le valider à nouveau pour que la modification soit bien prise en compte.");
+
+                return $this->render("record.html.twig",
+                    [
+                        "iln" => $iln,
+                        "rcr" => $rcr,
+                        "record" => $record,
+                        "empty" => null,
+                        "form" => $form->createView()
+                    ]
+                );
             }
-
-            $em->persist($record);
-            $em->flush();
-
-            return $this->redirect($this->generateUrl("view_rcr", ['ilnCode' => $iln->getCode(), 'rcrCode' => $rcr->getCode()]));
         }
 
         $record->setLocked();
