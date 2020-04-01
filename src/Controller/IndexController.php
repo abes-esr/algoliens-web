@@ -8,6 +8,7 @@ use App\Entity\Rcr;
 use App\Entity\Record;
 use App\Form\RecordType;
 use App\Repository\IlnRepository;
+use App\Repository\RecordRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use function PHPSTORM_META\type;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
@@ -89,6 +90,21 @@ class IndexController extends AbstractController
         return $this->render("iln.html.twig", ["iln" => $iln]);
     }
 
+    /**
+     * @Route("/iln/{iln}/rcr/{rcr}/unlock", name="force_unlock")
+     * @Entity("iln", expr="repository.findOneBy({'code': iln})")
+     * @Entity("rcr", expr="repository.findOneBy({'code': rcr})")
+     */
+    public function forceUnlock(Rcr $rcr, Iln $iln, RecordRepository $recordRepository, Request $request)
+    {
+        $unlockedRecords = $recordRepository->forceUnlockRecordsForRcr($rcr);
+        $session = $request->getSession();
+        $session->getFlashBag()->add('success', $unlockedRecords." notices libérées.");
+        return $this->redirect($this->generateUrl('view_rcr', ['ilnCode' => $iln->getCode(), 'rcrCode' => $rcr->getCode()]));
+    }
+
+
+
     private function getOneRecord(Request $request, Rcr $rcr, ?string $ppn) {
         $session = $request->getSession();
         if (is_null($ppn)) {
@@ -128,13 +144,18 @@ class IndexController extends AbstractController
             if (is_null($record)) {
                 // On essaie d'abord de libérer toutes les notices "lockées"
                 $this->getDoctrine()->getRepository(Record::class)->unlockRecords();
+
                 $record = $this->getOneRecord($request, $rcr, $ppn);
+
                 if (is_null($record)) {
+                    // On va vérifier combien il y a des notices "bloquées".
+                    $lockedRecords = $this->getDoctrine()->getRepository(Record::class)->getLockedRecords($rcr);
                     return $this->render("record.html.twig",
                         [
                             "iln" => $iln,
                             "rcr" => $rcr,
-                            "empty" => 1
+                            "empty" => 1,
+                            "lockedRecords" => $lockedRecords
                         ]
                     );
                 }

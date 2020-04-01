@@ -22,7 +22,25 @@
 
     {% if empty %}
         <div>
-            Plus aucune notice à traiter pour ce RCR !<br/>
+            <p><strong>Plus aucune notice à traiter pour ce RCR !</strong></p>
+            {% if lockedRecords|length > 0 %}
+                <div class="alert alert-warning">
+                    <p>
+                        {{ lockedRecords|length }} notices sont marquées comme à traiter dans la base mais sont "bloquées" car affichées dans cette interface il y a moins d'une heure. Le blocage des ces notices est destinée à éviter qu'une notice ne soit présentée simultanément à deux utilisateurs qui tenteraient alors de la modifier.
+                    </p>
+                <p>
+                    Les notices concernées sont :
+                    <ul>
+                        {% for record in lockedRecords %}
+                            <li><a href="https://www.sudoc.fr/{{ record.ppn }}" target="_blank">{{ record.ppn }}</a> : {{ record.title }} ({{ record.year }})</li>
+                        {% endfor %}
+                    </ul>
+                </p>
+                <p>
+                    Si vous le souhaitez, vous pouvez <a href="{{ url("force_unlock", {iln: iln.code, rcr: rcr.code}) }}" class="btn btn-info">forcer le déblocage</a> de ces notices.
+                </p>
+                </div>
+            {% endif %}
             Peut-être un <a href="{{ url('view_iln', {'code': iln.code}) }}">autre RCR de cet ILN</a> ?
         </div>
     {% else %}

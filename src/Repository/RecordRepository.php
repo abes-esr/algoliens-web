@@ -70,7 +70,26 @@ class RecordRepository extends ServiceEntityRepository
 
     public function unlockRecords() {
         $em = $this->getEntityManager();
-        $em->getConnection()->exec("UPDATE `record` set locked = null where locked is not null AND TIMEDIFF(now(), locked) > \"00:00:00\"");
+        $em->getConnection()->exec("UPDATE `record` set locked = null where locked is not null AND TIMEDIFF(now(), locked) > \"01:00:00\"");
+    }
+
+    public function forceUnlockRecordsForRcr(Rcr $rcr) {
+        return $this->createQueryBuilder('l')
+            ->update()
+            ->set('l.locked', 'null')
+            ->where("l.rcrCreate = :rcr and l.status = 0 and l.locked is not null")
+            ->setParameter('rcr', $rcr)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function getLockedRecords(Rcr $rcr) {
+        $result = $this->createQueryBuilder('l')
+            ->where("l.rcrCreate = :rcr and l.status=0 and l.locked != ''")
+            ->setParameter('rcr', $rcr)
+            ->getQuery()
+            ->getResult();
+        return $result;
     }
 
     private function countByStatusForRcr(Rcr $rcr, int $status) {
