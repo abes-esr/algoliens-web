@@ -13,6 +13,7 @@
             <th>Jour</th>
             <th>Notices corrigées</th>
             <th>Notices à reprendre document en main</th>
+            <th>Total</th>
         </tr>
         {% for month, monthdetail in yeardetail %}
             {% for day, daydetail in monthdetail %}
@@ -22,6 +23,7 @@
                     <td>{{ day }}/{{ month }}</td>
                     <td>{{ daydetail["1"] }}</td>
                     <td>{{ daydetail["2"] }}</td>
+                    <th>{{ daydetail["1"]  + daydetail["2"] }}</th>
                 </tr>
             {% endfor %}
         {% endfor %}
@@ -29,6 +31,7 @@
                 <th>Total</th>
                 <th>{{ corrected }}</th>
                 <th>{{ reprise }}</th>
+                <th>{{ corrected + reprise }}</th>
             </tr>
         </table>
     {% endfor %}
