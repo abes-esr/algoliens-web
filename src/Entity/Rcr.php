@@ -64,6 +64,11 @@ class Rcr
      */
     private $active;
 
+    /**
+     * @ORM\Column(type="integer", nullable=true, options={"default": 0})
+     */
+    private $numberOfRecordsReprise;
+
     public function __construct()
     {
         $this->records = new ArrayCollection();
@@ -182,9 +187,14 @@ class Rcr
         return $this;
     }
 
+    public function updateNumberOfRecordsCorrection() {
+        $countCorrected = $em->getRepository(Record::class)->countCorrectedForRcr($record->getRcrCreate());
+        $record->getRcrCreate()->setNumberOfRecordsCorrected($countCorrected);
+    }
+
     public function getNumberOfRecordsAvailable(): ?int
     {
-        return ($this->getNumberOfRecords() - $this->getNumberOfRecordsCorrected());
+        return ($this->getNumberOfRecords() - $this->getNumberOfRecordsCorrected() - $this->getNumberOfRecordsReprise());
     }
 
     public function getHarvested(): ?int
@@ -207,6 +217,18 @@ class Rcr
     public function setActive(bool $active): self
     {
         $this->active = $active;
+
+        return $this;
+    }
+
+    public function getNumberOfRecordsReprise(): ?int
+    {
+        return $this->numberOfRecordsReprise;
+    }
+
+    public function setNumberOfRecordsReprise(?int $numberOfRecordsReprise): self
+    {
+        $this->numberOfRecordsReprise = $numberOfRecordsReprise;
 
         return $this;
     }

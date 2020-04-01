@@ -154,12 +154,10 @@ class IndexController extends AbstractController
             if ($submitButton->getName() == "validate") {
                 // On va mettre à jour
                 $record->setStatus(1);
-                $countCorrected = $em->getRepository(Record::class)->countCorrectedForRcr($record->getRcrCreate());
-                $record->getRcrCreate()->setNumberOfRecordsCorrected($countCorrected);
-
                 $session = $request->getSession();
                 $session->getFlashBag()->add('success', "Correction de la notice n°".$record->getPpn()." enregistrée, elle ne sera plus proposée par cette interface.");
-
+                $countCorrected = $em->getRepository(Record::class)->countCorrectedForRcr($record->getRcrCreate());
+                $record->getRcrCreate()->setNumberOfRecordsCorrected($countCorrected);
             } elseif ($submitButton->getName() == "skip") {
                 $skipReason = $request->request->get("record")["skipReason"];
                 if ($skipReason == Record::SKIP_PHYSICAL_NEEDED) {
@@ -167,10 +165,14 @@ class IndexController extends AbstractController
                     $session->getFlashBag()->add('success', "Cette notice ne sera plus proposée. Elle sera listée dans celles à reprendre document en main.");
                     $record->setStatus(Record::SKIP_PHYSICAL_NEEDED);
                     $record->setComment($recordForm->getComment());
+
+                    $countReprise = $em->getRepository(Record::class)->countRepriseForRcr($record->getRcrCreate());
+                    $record->getRcrCreate()->setNumberOfRecordsReprise($countReprise);
                 } else {
                     $record->setLocked(null);
                 }
             }
+
             $em->persist($record);
             $em->flush();
 

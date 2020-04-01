@@ -10,19 +10,28 @@
             <li>faire les corrections nécessaires via Winibw ou Paprika → cette notice ne sera plus proposées</li>
             <li>passer votre tour → cette notice pourra être proposée à nouveau à l'avenir</li>
         </ul>
-
+        <p>
+            {{ iln.getNumberOfRecordsCorrected }} notices traitées jusqu'ici pour cet ILN.
+        </p>
     </div>
     <table class="table">
         <tr>
            <th>RCR</th>
            <th>Libellé</th>
-            <th>Nombre de notices disponibles</th>
+            <th>Reste à traiter</th>
+            <th>À reprendre document en main</th>
         </tr>
     {% for rcr in iln.getRcrs() %}
         <tr>
            <td>{{ rcr.code }}</td>
             <td><a href="{{  url('view_rcr', {ilnCode: iln.code, rcrCode: rcr.code}) }}">{{ rcr.label }}</a></td>
             <td>{{ rcr.numberOfRecordsAvailable }}</td>
+            <td>
+                {% if rcr.numberOfRecordsReprise != 0 %}
+                <a href="{{ url("view_rcr_reprise", {ilnCode: iln.code, rcrCode: rcr.code}) }}">{{ rcr.numberOfRecordsReprise }}</a></td>
+                {% else %}
+                -
+                {% endif %}
         </tr>
     {% endfor %}
     </table>

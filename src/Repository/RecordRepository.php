@@ -73,21 +73,30 @@ class RecordRepository extends ServiceEntityRepository
         $em->getConnection()->exec("UPDATE `record` set locked = null where locked is not null AND TIMEDIFF(now(), locked) > \"00:00:00\"");
     }
 
-    public function countCorrectedForRcr(Rcr $rcr) {
+    private function countByStatusForRcr(Rcr $rcr, int $status) {
         $countResults = $this->createQueryBuilder('l')
             ->select("COUNT(l)")
-            ->where("l.status = 1 and l.rcrCreate = :rcr")
+            ->where("l.status = :status and l.rcrCreate = :rcr")
             ->setParameter('rcr', $rcr)
+            ->setParameter('status', $status)
             ->getQuery()
             ->getSingleScalarResult();
 
         return $countResults;
     }
+    public function countCorrectedForRcr(Rcr $rcr) {
+        return $this->countByStatusForRcr($rcr, Record::RECORD_VALIDATED );
+    }
+
+    public function countRepriseForRcr(Rcr $rcr) {
+        return $this->countByStatusForRcr($rcr, Record::SKIP_PHYSICAL_NEEDED);
+    }
 
     public function findRepriseNeeded(Rcr $rcr) {
         return $this->createQueryBuilder('l')
-            ->where("l.comment != '' and l.rcrCreate = :rcr")
+            ->where("l.status = :status and l.rcrCreate = :rcr")
             ->setParameter('rcr', $rcr)
+            ->setParameter('status', Record::SKIP_PHYSICAL_NEEDED)
             ->getQuery()
             ->getResult();
     }

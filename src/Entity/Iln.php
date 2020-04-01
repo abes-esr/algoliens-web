@@ -115,4 +115,12 @@ class Iln
 
         return $this;
     }
+
+    public function getNumberOfRecords() {
+        return array_reduce($this->getRcrs()->getValues(), function ($total, $rcr) { $total += $rcr->getNumberOfRecords(); return $total; });
+    }
+
+    public function getNumberOfRecordsCorrected() {
+        return array_reduce($this->getRcrs()->getValues(), function ($total, $rcr) { $total += $rcr->getNumberOfRecordsCorrected(); return $total; });
+    }
 }
