@@ -82,11 +82,6 @@ class Record
     private $marcAfter;
 
     /**
-     * @ORM\Column(type="smallint")
-     */
-    private $urlCallType;
-
-    /**
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $winnie;
@@ -105,6 +100,11 @@ class Record
      * @ORM\Column(type="string", length=12, nullable=true)
      */
     private $year;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="App\Entity\BatchImport", inversedBy="records")
+     */
+    private $batchImport;
 
     public function __construct()
     {
@@ -263,18 +263,6 @@ class Record
         return $this;
     }
 
-    public function getUrlCallType(): ?int
-    {
-        return $this->urlCallType;
-    }
-
-    public function setUrlCallType(int $urlCallType): self
-    {
-        $this->urlCallType = $urlCallType;
-
-        return $this;
-    }
-
     public function getWinnie(): ?bool
     {
         return $this->winnie;
@@ -319,6 +307,18 @@ class Record
     public function setYear(?string $year): self
     {
         $this->year = $year;
+
+        return $this;
+    }
+
+    public function getBatchImport(): ?BatchImport
+    {
+        return $this->batchImport;
+    }
+
+    public function setBatchImport(?BatchImport $batchImport): self
+    {
+        $this->batchImport = $batchImport;
 
         return $this;
     }

@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello AdminController!{% endblock %}
+
+{% block body %}
+<div class="example-wrapper">
+    <h1>Admin- RCR {{ rcr.code }} - {{ rcr.label }}</h1>
+
+    {% set batchCrea =  rcr.hasBatchRun(constant('App\\Entity\\BatchImport::TYPE_RCR_CREA')) %}
+    {% set batchUnica =  rcr.hasBatchRun(constant('App\\Entity\\BatchImport::TYPE_UNICA')) %}
+
+    <h2>Statistiques</h2>
+    <p><span class="badge badge-success btn-lg">{{ rcr.numberOfRecords }}</span> notices dans la base</p>
+    <p><span class="badge badge-success btn-lg">{{ rcr.numberOfRecordsCorrected }}</span> notices corrigées</p>
+    <p><span class="badge badge-success btn-lg">{{ rcr.numberOfRecordsReprise }}</span> notices à reprendre document en main</p>
+
+    <h2>Batch RCR Créateur</h2>
+    {% if not batchCrea %}
+        <td class="text-center" colspan="3">Jamais joué</td>
+    {% else %}
+        <td>{{ batchCrea.runDate | date("Y-m-d H:i:s")}}</td>
+        <td><span class="badge badge-info">{{ batchCrea.countRecords }} records</span></td>
+        <td><span class="badge badge-info">{{ batchCrea.countErrors }} errors</span></td>
+    {% endif %}
+
+    <h2>Batch Unica</h2>
+    {% if not batchUnica %}
+        <td class="text-center" colspan="3">Jamais joué</td>
+    {% else %}
+        <td>{{ batchUnica.runDate | date("Y-m-d H:i:s")}}</td>
+        <td><span class="badge badge-info">{{ batchUnica.countRecords }} records</span></td>
+        <td><span class="badge badge-info">{{ batchUnica.countErrors }} errors</span></td>
+    {% endif %}
+</div>
+{% endblock %}

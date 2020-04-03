@@ -5,7 +5,7 @@
         var url_raw_record = "{{ url("raw_record", {'ppn': record.ppn}) }}";
 
         var url_is_localized = "";
-        {% if record.urlCallType == 1 %}
+        {% if record.batchImport.typeLabel == "RCR CRÉATEUR" %}
             var url_is_localized = "{{ url("verif_loca", {'ppn': record.ppn, 'rcr': rcr.code}) }}";
         {% endif %}
     </script>
@@ -41,7 +41,7 @@
                 </p>
                 </div>
             {% endif %}
-            Peut-être un <a href="{{ url('view_iln', {'code': iln.code}) }}">autre RCR de cet ILN</a> ?
+            Peut-être un <a href="{{ url('view_iln', {'code': iln.code, 'secret': iln.secret}) }}">autre RCR de cet ILN</a> ?
         </div>
     {% else %}
         <div class="row">
@@ -55,18 +55,14 @@
                     </div>
                 {% endif %}
         <p>Information sur le document : <span class="badge badge-info">{{ record.docTypeLabel }}</span>
-            {% if record.getUrlCallType() == 1 %}
-                <span class="badge badge-primary">RCR CRÉATEUR</span>
-            {% else %}
-                <span class="badge badge-primary">UNICA</span>
-            {% endif %}
+            <span class="badge badge-primary">{{ record.batchImport.typeLabel }}</span>
         </p>
                 <p>
                     La notice n°<a target="_blank" href="http://www.sudoc.fr/{{ record.ppn }}">{{ record.ppn }}</a> vous est proposée car
-                {% if record.getUrlCallType() == 1 %}
-                    le RCR {{ rcr.code }} en est le créateur
-                {% else %}
+                {% if record.batchImport.typeLabel == "UNICA" %}
                     le RCR {{ rcr.code }} est le seul établissement du réseau localisé dessus
+                {% else %}
+                    le RCR {{ rcr.code }} en est le créateur
                 {% endif %}
                     et qu'elle comporte les erreurs suivantes :</p>
                 <ul>

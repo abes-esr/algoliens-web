@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Iln;
 use App\Entity\Rcr;
+use App\Entity\Record;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Persistence\ManagerRegistry;
 
@@ -22,6 +23,28 @@ class RcrRepository extends ServiceEntityRepository
 
     public function findByIln(Iln $iln) {
         return $this->findBy(['iln' => $iln], array('label' => 'ASC'));
+    }
+
+    public function updateStats(Rcr $rcr) {
+        $recordRepository = $this->getEntityManager()->getRepository(Record::class);
+
+        $countRecords = sizeof($recordRepository->findBy(['rcrCreate' => $rcr]));
+        $countRecordsCorrected = sizeof($recordRepository->findBy(['rcrCreate' => $rcr, 'status' => Record::RECORD_VALIDATED]));
+        $countRecordsReprise = sizeof($recordRepository->findBy(['rcrCreate' => $rcr, 'status' => Record::SKIP_PHYSICAL_NEEDED]));
+
+        $q = $this->createQueryBuilder('l')
+            ->update()
+            ->set('l.numberOfRecords', ':countRecords')
+            ->set('l.numberOfRecordsCorrected', ':countRecordsCorrected')
+            ->set('l.numberOfRecordsReprise', ':countRecordsReprise')
+            ->setParameter('countRecords', $countRecords)
+            ->setParameter('countRecordsCorrected', $countRecordsCorrected)
+            ->setParameter('countRecordsReprise', $countRecordsReprise)
+            ->where('l.id = :rcrId')
+            ->setParameter('rcrId', $rcr->getId())
+            ->getQuery();
+        $q->execute();
+
     }
     // /**
     //  * @return Rcr[] Returns an array of Rcr objects

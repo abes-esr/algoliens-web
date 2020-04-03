@@ -29,15 +29,14 @@ class PopulateIlnCommand extends Command
     {
         $this
             ->setDescription('Based on an ILN NUMBER')
-            ->addArgument('arg1', InputArgument::OPTIONAL, 'Argument description')
-            ->addOption('option1', null, InputOption::VALUE_NONE, 'Option description')
+            ->addArgument('ilnNumber', InputArgument::OPTIONAL, "Code de l'iln au format numérique")
         ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $ilnNumber = $input->getArgument('arg1');
+        $ilnNumber = $input->getArgument('ilnNumber');
         if (!$ilnNumber) {
             $io->error("Manque le code de l'ILN en argument");
             exit;
@@ -60,6 +59,9 @@ class PopulateIlnCommand extends Command
             $rcr->setLabel($rcrDescription->library->shortname);
             $rcr->setUpdated(new \DateTime());
             $rcr->setIln($iln);
+            $rcr->setHarvested(0);
+            $rcr->setActive(1);
+
             $this->em->persist($rcr);
             $count++;
         }

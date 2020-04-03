@@ -69,21 +69,7 @@ class IndexController extends AbstractController
     }
 
     /**
-     * @Route("/ilns", name="view_all_ilns")
-     */
-    public function ilns(Request $request)
-    {
-        $session = $request->getSession();
-        if (!$session->has("winnie")) {
-            return $this->redirect($this->generateUrl("settings"));
-        }
-        $ilns = $this->getDoctrine()->getRepository(Iln::class)->findAll();
-
-        return $this->render("ilns.html.twig", ["ilns" => $ilns]);
-    }
-
-    /**
-     * @Route("/iln/{code}", name="view_iln")
+     * @Route("/chantier/{code}-{secret}", name="view_iln")
      */
     public function ilnView(Iln $iln)
     {
@@ -91,7 +77,7 @@ class IndexController extends AbstractController
     }
 
     /**
-     * @Route("/iln/{iln}/rcr/{rcr}/unlock", name="force_unlock")
+     * @Route("/chantier/{code}-{secret}/rcr/{rcr}/unlock", name="force_unlock")
      * @Entity("iln", expr="repository.findOneBy({'code': iln})")
      * @Entity("rcr", expr="repository.findOneBy({'code': rcr})")
      */
@@ -132,7 +118,7 @@ class IndexController extends AbstractController
 
 
     /**
-     * @Route("/iln/{ilnCode}/rcr/{rcrCode}/{ppn?}", name="view_rcr")
+     * @Route("/chantier/{ilnCode}-{secret}/rcr/{rcrCode}/{ppn?}", name="view_rcr")
      * @Entity("iln", expr="repository.findOneBy({'code': ilnCode})")
      * @Entity("rcr", expr="repository.findOneBy({'code': rcrCode})")
      */
@@ -200,7 +186,7 @@ class IndexController extends AbstractController
                 $em->persist($record);
                 $em->flush();
 
-                return $this->redirect($this->generateUrl("view_rcr", ['ilnCode' => $iln->getCode(), 'rcrCode' => $rcr->getCode()]));
+                return $this->redirect($this->generateUrl("view_rcr", ['ilnCode' => $iln->getCode(), 'rcrCode' => $rcr->getCode(), 'secret' => $iln->getSecret()]));
             } else {
                 $session = $request->getSession();
                 $session->getFlashBag()->add('danger', "<strong>Attention</strong> : l'enregistrement du formulaire a provoqué une erreur (<i>Timeout</i>). Merci de le valider à nouveau pour que la modification soit bien prise en compte.");

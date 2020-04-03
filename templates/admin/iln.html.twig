@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello AdminController!{% endblock %}
+
+{% block body %}
+<div class="example-wrapper">
+    <h1>Admin</h1>
+    <h2>Liste des RCR</h2>
+    <table class="table">
+        <tr>
+            <th rowspan="2">Code</th>
+            <th rowspan="2">Label</th>
+            <th colspan="2">Batchs</th>
+            <th rowspan="2">Actions</th>
+        </tr>
+        <tr>
+            <th>Créateur</th>
+            <th>Unica</th>
+        </tr>
+        {% for rcr in iln.rcrs %}
+            <tr>
+                <td>{{ rcr.code }}</td>
+                <td>{{ rcr.label }}</td>
+                {% set batchCrea =  rcr.hasBatchRun(constant('App\\Entity\\BatchImport::TYPE_RCR_CREA')) %}
+                {% set batchUnica =  rcr.hasBatchRun(constant('App\\Entity\\BatchImport::TYPE_UNICA')) %}
+                <td>
+                {% if not batchCrea %}
+                    <span class="badge badge-danger">&#10006;</span>
+                    {% else %}
+                    <span class="badge badge-success">&#x2714;</span>
+                {% endif %}
+                </td>
+                <td>
+                {% if not batchUnica %}
+                    <span class="badge badge-danger">&#10006;</span>
+                {% else %}
+                    <span class="badge badge-success">&#x2714;</span>
+                {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url('admin_rcr', {'ilnCode': iln.code, 'rcrCode': rcr.code}) }}">voir le détail</a>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endblock %}

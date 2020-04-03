@@ -24,7 +24,7 @@
     {% for rcr in iln.getRcrs() %}
         <tr>
            <td>{{ rcr.code }}</td>
-            <td><a href="{{  url('view_rcr', {ilnCode: iln.code, rcrCode: rcr.code}) }}">{{ rcr.label }}</a></td>
+            <td><a href="{{  url('view_rcr', {ilnCode: iln.code, rcrCode: rcr.code, secret: iln.secret}) }}">{{ rcr.label }}</a></td>
             <td>{{ rcr.numberOfRecordsAvailable }}</td>
             <td>
                 {% if rcr.numberOfRecordsReprise != 0 %}

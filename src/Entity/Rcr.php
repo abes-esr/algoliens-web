@@ -69,9 +69,15 @@ class Rcr
      */
     private $numberOfRecordsReprise;
 
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\BatchImport", mappedBy="rcr")
+     */
+    private $batchImports;
+
     public function __construct()
     {
         $this->records = new ArrayCollection();
+        $this->batchImports = new ArrayCollection();
     }
 
     public function __toString()
@@ -230,6 +236,46 @@ class Rcr
     public function setNumberOfRecordsReprise(?int $numberOfRecordsReprise): self
     {
         $this->numberOfRecordsReprise = $numberOfRecordsReprise;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|BatchImport[]
+     */
+    public function getBatchImports(): Collection
+    {
+        return $this->batchImports;
+    }
+
+    public function addBatchImport(BatchImport $batchImport): self
+    {
+        if (!$this->batchImports->contains($batchImport)) {
+            $this->batchImports[] = $batchImport;
+            $batchImport->setRcr($this);
+        }
+
+        return $this;
+    }
+
+    public function hasBatchRun(int $batchType) {
+        foreach ($this->getBatchImports() as $batchImport) {
+            if ($batchImport->getType() == $batchType) {
+                return $batchImport;
+            }
+        }
+        return false;
+    }
+
+    public function removeBatchImport(BatchImport $batchImport): self
+    {
+        if ($this->batchImports->contains($batchImport)) {
+            $this->batchImports->removeElement($batchImport);
+            // set the owning side to null (unless already changed)
+            if ($batchImport->getRcr() === $this) {
+                $batchImport->setRcr(null);
+            }
+        }
 
         return $this;
     }

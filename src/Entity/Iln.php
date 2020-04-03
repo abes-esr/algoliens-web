@@ -38,6 +38,11 @@ class Iln
      */
     private $rcrs;
 
+    /**
+     * @ORM\Column(type="string", length=4)
+     */
+    private $secret;
+
     public function __construct()
     {
         $this->rcrs = new ArrayCollection();
@@ -126,6 +131,18 @@ class Iln
 
     public function getNumberOfRecordsHandled() {
         return array_reduce($this->getRcrs()->getValues(), function ($total, $rcr) { $total += $rcr->getNumberOfRecordsHandled(); return $total; });
+    }
+
+    public function getSecret(): ?string
+    {
+        return $this->secret;
+    }
+
+    public function setSecret(string $secret): self
+    {
+        $this->secret = $secret;
+
+        return $this;
     }
 
 }
