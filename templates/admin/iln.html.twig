@@ -4,12 +4,14 @@
 
 {% block body %}
 <div class="example-wrapper">
+    {% include "admin/_breadcrumb.html.twig" %}
     <h1>Admin</h1>
     <h2>Liste des RCR</h2>
     <table class="table">
         <tr>
             <th rowspan="2">Code</th>
             <th rowspan="2">Label</th>
+            <th rowspan="2">Notices</th>
             <th colspan="2">Batchs</th>
             <th rowspan="2">Actions</th>
         </tr>
@@ -21,6 +23,7 @@
             <tr>
                 <td>{{ rcr.code }}</td>
                 <td>{{ rcr.label }}</td>
+                <td>{{ rcr.numberOfRecords }}</td>
                 {% set batchCrea =  rcr.hasBatchRun(constant('App\\Entity\\BatchImport::TYPE_RCR_CREA')) %}
                 {% set batchUnica =  rcr.hasBatchRun(constant('App\\Entity\\BatchImport::TYPE_UNICA')) %}
                 <td>

@@ -6,30 +6,40 @@
 <div class="example-wrapper">
     <h1>Admin- RCR {{ rcr.code }} - {{ rcr.label }}</h1>
 
-    {% set batchCrea =  rcr.hasBatchRun(constant('App\\Entity\\BatchImport::TYPE_RCR_CREA')) %}
-    {% set batchUnica =  rcr.hasBatchRun(constant('App\\Entity\\BatchImport::TYPE_UNICA')) %}
-
     <h2>Statistiques</h2>
     <p><span class="badge badge-success btn-lg">{{ rcr.numberOfRecords }}</span> notices dans la base</p>
     <p><span class="badge badge-success btn-lg">{{ rcr.numberOfRecordsCorrected }}</span> notices corrigées</p>
     <p><span class="badge badge-success btn-lg">{{ rcr.numberOfRecordsReprise }}</span> notices à reprendre document en main</p>
 
-    <h2>Batch RCR Créateur</h2>
-    {% if not batchCrea %}
-        <td class="text-center" colspan="3">Jamais joué</td>
-    {% else %}
-        <td>{{ batchCrea.runDate | date("Y-m-d H:i:s")}}</td>
-        <td><span class="badge badge-info">{{ batchCrea.countRecords }} records</span></td>
-        <td><span class="badge badge-info">{{ batchCrea.countErrors }} errors</span></td>
-    {% endif %}
+    {% set batchCodeCrea = constant('App\\Entity\\BatchImport::TYPE_RCR_CREA') %}
+    {% set batchCodeUnica = constant('App\\Entity\\BatchImport::TYPE_UNICA') %}
 
-    <h2>Batch Unica</h2>
-    {% if not batchUnica %}
-        <td class="text-center" colspan="3">Jamais joué</td>
-    {% else %}
-        <td>{{ batchUnica.runDate | date("Y-m-d H:i:s")}}</td>
-        <td><span class="badge badge-info">{{ batchUnica.countRecords }} records</span></td>
-        <td><span class="badge badge-info">{{ batchUnica.countErrors }} errors</span></td>
-    {% endif %}
+    {% for batchType in [batchCodeCrea, batchCodeUnica] %}
+        {% set batch =  rcr.hasBatchRun(batchType) %}
+
+        {% if batchType == batchCodeCrea %}
+            <h2>Batch RCR Créateur</h2>
+        {% elseif batchType == batchCodeUnica %}
+            <h2>Batch UNICA</h2>
+        {% endif %}
+
+        {% if not batch %}
+            <p>Jamais joué : <a href="{{ url("admin_batch_new", {ilnCode: rcr.iln.code, rcrCode: rcr.code, batchType: batchType})}}">Jouer maintenant</a></p>
+        {% else %}
+            <table class="table"><tr>
+                    <td><span class="badge badge-{{ batch.statusClass }}">{{ batch.statusLabel }}</span></td>
+                    <td>{{ batch.runDate | date("Y-m-d H:i:s")}}</td>
+                    <td><span class="badge badge-info">{{ batch.countRecords }} records</span></td>
+                    <td><span class="badge badge-info">{{ batch.countErrors }} errors</span></td>
+                    <td>
+                        {% if batch.status == constant('App\\Entity\\BatchImport::STATUS_FINISHED') %}
+                            <a href="{{ url("admin_batch_action", {ilnCode: rcr.iln.code, rcrCode: rcr.code, batchId: batch.id, action: 'delete'}) }}" class="btn btn-danger btn-sm">supprimer les notices</a>
+                        {% endif %}
+                        &nbsp;
+                    </td>
+                </tr>
+            </table>
+        {% endif %}
+    {% endfor %}
 </div>
 {% endblock %}

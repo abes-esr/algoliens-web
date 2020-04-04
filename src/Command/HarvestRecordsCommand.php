@@ -6,6 +6,7 @@ use App\Entity\BatchImport;
 use App\Entity\Iln;
 use App\Entity\Rcr;
 use App\Repository\RcrRepository;
+use App\Service\WsHarvester;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Helper;
@@ -27,11 +28,13 @@ class HarvestRecordsCommand extends Command
 
     private $em;
     private $io;
+    private $wsHarvester;
 
-    public function __construct(string $name = null, EntityManagerInterface $em)
+    public function __construct(string $name = null, EntityManagerInterface $em, WsHarvester $wsHarvester)
     {
         parent::__construct($name);
         $this->em = $em;
+        $this->wsHarvester = $wsHarvester;
     }
 
     protected function configure()
@@ -90,18 +93,17 @@ class HarvestRecordsCommand extends Command
         if ($rcr->hasBatchRun($batchType)) {
             $this->io->writeln("<error>Déjà joué</error>");
         } else {
-            $batchImport = new BatchImport($rcr, $batchType, $this->em);
-            $batchImport->run();
+            $batchImport = $this->wsHarvester->runNewBatch($rcr, $batchType);
             $this->displayBatchResult($batchImport);
         }
     }
 
     private function runBatches(Rcr $rcr) {
         $this->runBatch($rcr, BatchImport::TYPE_RCR_CREA);
-        $this->em->getRepository(Rcr::class)->updateStats($rcr);
-        exit;
         $this->runBatch($rcr, BatchImport::TYPE_UNICA);
+        $this->em->getRepository(Rcr::class)->updateStats($rcr);
     }
+
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->io = new SymfonyStyle($input, $output);

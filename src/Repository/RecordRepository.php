@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\BatchImport;
 use App\Entity\LinkError;
 use App\Entity\Rcr;
 use App\Entity\Record;
@@ -120,6 +121,14 @@ class RecordRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function deleteForBatch(BatchImport $batchImport) {
+        $this->createQueryBuilder('l')
+            ->delete()
+            ->where('l.batchImport = :batchImport')
+            ->setParameter('batchImport', $batchImport)
+            ->getQuery()
+            ->execute();
+    }
 
     // /**
     //  * @return Record[] Returns an array of Record objects

@@ -40,7 +40,7 @@ class Record
     private $status;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Entity\LinkError", mappedBy="record")
+     * @ORM\OneToMany(targetEntity="App\Entity\LinkError", mappedBy="record", cascade={"remove"})
      * @ORM\OrderBy({"errorCode" = "ASC"})
      */
     private $linkErrors;

@@ -16,7 +16,11 @@ class BatchImport
     const TYPE_RCR_CREA = 1;
     const TYPE_UNICA = 2;
 
-    private $startTime = null;
+    const STATUS_RUNNING = 1;
+    const STATUS_FINISHED = 2;
+    const STATUS_ERROR = 3;
+    const STATUS_CANCEL = 4;
+
     private $em = null;
 
     /**
@@ -62,6 +66,11 @@ class BatchImport
      */
     private $duration;
 
+    /**
+     * @ORM\Column(type="smallint")
+     */
+    private $status;
+
     public function __construct(Rcr $rcr = null, int $type = null, EntityManagerInterface $em = null)
     {
         $this->records = new ArrayCollection();
@@ -70,9 +79,6 @@ class BatchImport
         $this->setRunDate(new \DateTime());
         $this->setCountRecords(0);
         $this->setCountErrors(0);
-        $this->em = $em;
-        $this->em->persist($this);
-        $this->em->flush();
     }
 
     public function getId(): ?int
@@ -157,135 +163,6 @@ class BatchImport
         return $this;
     }
 
-    private function processUrl() {
-        $content = $this->getAlgoLienContent($url, 10000);
-        if (is_null($content)) {
-            return null;
-        }
-        $this->io->writeln("WS : fin (".(microtime(true) - $start).")");
-
-        $this->processContent($rcr, $urlCallType, $content);
-        $this->io->writeln(sprintf("<info>Durée de traitement </info> : %s",  (microtime(true) - $startRcr)));
-    }
-
-
-    private function getUrl() {
-        if ($this->getType() == self::TYPE_RCR_CREA) {
-            $url = sprintf("https://www.idref.fr/AlgoLiens?rcr=%s&paprika=1", $this->getRcr()->getCode());
-        } elseif ($this->getType() == self::TYPE_UNICA)
-        {
-            $url = sprintf("https://www.idref.fr/AlgoLiens?localisationRcr=%s&unica=localisationRcr&paprika=1", $this->getRcr()->getCode());
-        }
-        return $url;
-    }
-
-    private function getApiContent($rownum = 10000) {
-        if ($rownum == 0) {
-            // Si on arrive à 0, on abandonne
-            $this->io->writeln("<error>Récupération impossible, on abandonne</error>");
-            return null;
-        }
-        $url = $this->getUrl()."&rownum=".$rownum;
-        $client = HttpClient::create();
-        try {
-            $response = $client->request('GET', $url."&rownum=".$rownum, [
-                'max_duration' => 0
-            ]);
-            $content = $response->getContent();
-        } catch (\Exception $e) {
-            return $this->getApiContent(intval($rownum / 2));
-        }
-        $this->storeContent($content);
-        return $content;
-
-    }
-
-    private function storeContent($content) {
-        file_put_contents(dirname(__FILE__)."/../../var/batches/".$this->getId().".txt", $content);
-    }
-
-    private function processLine(array &$existingRecords, &$ppnPaprikaAlreadySet, $line) {
-        $error = preg_split("/\t/", $line);
-        if (sizeof($error) > 1) {
-            $ppn = trim($error[0]);
-            if (isset($existingRecords[$ppn])) {
-                $record = $existingRecords[$ppn];
-            } else {
-                $record = $this->em->getRepository(Record::class)->findOneBy(["ppn" => $ppn, "rcrCreate" => $this->getRcr()]);
-            }
-
-            if (is_null($record)) {
-                $this->setCountRecords($this->getCountRecords() + 1);
-                $record = new Record();
-                $record->setPpn($ppn);
-                $record->setRcrCreate($this->getRcr());
-
-                $date = trim($error[4]);
-                $date = \DateTime::createFromFormat('Y-m-j H:i:s', $date );
-                $record->setLastUpdate($date);
-                $record->setStatus(0);
-                $record->setDocTypeCode($error[6]);
-                $record->setDocTypeLabel($error[7]);
-                $record->setBatchImport($this);
-
-                $record->setWinnie(0);
-                $this->em->persist($record);
-            } elseif ($record->getBatchImport()->getType() != $this->getType() ) {
-                // On a déjà récupéré cette notice lors d'un autre import, plus besoin de la traiter
-                return;
-            }
-
-            $existingRecords[$ppn] = $record;
-
-            $this->setCountErrors($this->getCountErrors() + 1);
-            $errorObject = new LinkError();
-            $errorObject->setErrorText($error[3]);
-            $errorObject->setErrorCode($error[5]);
-            $paprikaUrl = trim($error[8]);
-            if ($paprikaUrl) {
-                if (!isset($ppnPaprikaAlreadySet[$ppn])) {
-                    $ppnPaprikaAlreadySet[$ppn] = 1;
-
-                    $paprikaUrls = preg_split("/#/", $paprikaUrl);
-                    foreach ($paprikaUrls as $tmpUrl) {
-                        $paprikaLink = new PaprikaLink();
-                        $paprikaLink->setUrl($tmpUrl);
-                        $this->em->persist($paprikaLink);
-                        $errorObject->addPaprikaLink($paprikaLink);
-                    }
-                }
-            } else {
-                $record->setWinnie(1);
-                $this->em->persist($record);
-            }
-            // $errorObject->setRecord($record);
-            $record->addLinkError($errorObject);
-            $this->em->persist($errorObject);
-        }
-    }
-
-    private function processContent($content) {
-        $lines = preg_split("/\n/", $content);
-        $lines = array_slice($lines, 3);
-
-        $ppnPaprikaAlreadySet = [];
-
-        $existingRecords = [];
-        foreach ($lines as $line) {
-            $this->processLine($existingRecords, $ppnPaprikaAlreadySet, $line);
-        }
-        $this->em->persist($this->getRcr());
-    }
-
-    public function run() {
-        $startTime = microtime(true);
-        $content = $this->getApiContent();
-        $this->processContent($content);
-        $this->setDuration(microtime(true) - $startTime);
-
-        $this->em->flush();
-    }
-
     public function getCountRecords(): ?int
     {
         return $this->countRecords;
@@ -318,6 +195,52 @@ class BatchImport
     public function setDuration(?float $duration): self
     {
         $this->duration = $duration;
+
+        return $this;
+    }
+
+    public function getIlnCode(): string
+    {
+        return $this->getRcr()->getIln()->getCode();
+    }
+
+    public function getStatus(): ?int
+    {
+        return $this->status;
+    }
+
+    public function getStatusLabel(): string
+    {
+        switch ($this->status) {
+            case BatchImport::STATUS_CANCEL:
+                return "Annulé";
+            case BatchImport::STATUS_FINISHED:
+                return "Terminé";
+            case BatchImport::STATUS_ERROR:
+                return "Erreur";
+            case BatchImport::STATUS_RUNNING:
+                return "En cours";
+        }
+        return $this->status;
+    }
+
+    public function getStatusClass(): string
+    {
+        switch ($this->status) {
+            case BatchImport::STATUS_CANCEL:
+                return "warning";
+            case BatchImport::STATUS_FINISHED:
+                return "success";
+            case BatchImport::STATUS_ERROR:
+                return "warning";
+            case BatchImport::STATUS_RUNNING:
+                return "warning";
+        }
+    }
+
+    public function setStatus(int $status): self
+    {
+        $this->status = $status;
 
         return $this;
     }

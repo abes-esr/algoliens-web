@@ -23,7 +23,7 @@ class PaprikaLink
 
     /**
      * @ORM\ManyToOne(targetEntity="App\Entity\LinkError", inversedBy="paprikaLinks")
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\JoinColumn(nullable=false, onDelete="CASCADE")
      */
     private $linkError;
 

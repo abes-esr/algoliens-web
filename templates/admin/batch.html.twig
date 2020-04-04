@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello AdminController!{% endblock %}
+
+{% block body %}
+<div class="example-wrapper">
+    {% if confirm is null %}
+        <div class="alert alert-danger ">
+            En supprimant cet import, vous supprimerez les <strong>{{ batchImport.countRecords }} notices associées</strong>
+        </div>
+        <a href="{{ url('admin_batch_action', {ilnCode: batchImport.rcr.iln.code, rcrCode: batchImport.rcr.code, batchId: batchImport.id, action: action, confirm: 'confirm'}) }}" class="btn btn-primary">Confirmer</a>
+        -
+        <a href="{{ url('admin_rcr', {ilnCode: batchImport.rcr.iln.code, rcrCode: batchImport.rcr.code}) }}">annuler</a>
+    {% else %}
+
+    {% endif %}
+</div>
+{% endblock %}

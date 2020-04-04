@@ -1,0 +1,14 @@
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url('home') }}">Accueil</a></li>
+        {% if iln is defined %}
+            <li class="breadcrumb-item"><a href="{{ url('admin') }}">Admin</a></li>
+            <li class="breadcrumb-item"><a href="{{ url('admin_iln', {'code': iln.code, 'secret': iln.secret}) }}">{{ iln.label }}</a></li>
+        {% else %}
+            <li class="breadcrumb-item active" aria-current="page">Admin</li>
+        {% endif %}
+        {% if rcr is defined %}
+            <li class="breadcrumb-item"><a href="{{ url('admin_rcr', {'ilnCode': iln.code, 'rcrCode': rcr.code, 'secret': iln.secret}) }}">{{ rcr.label }}</a></li>
+        {% endif %}
+    </ol>
+</nav>
