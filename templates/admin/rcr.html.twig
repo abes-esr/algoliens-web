@@ -4,6 +4,7 @@
 
 {% block body %}
 <div class="example-wrapper">
+    {% include "admin/_breadcrumb.html.twig" %}
     <h1>Admin- RCR {{ rcr.code }} - {{ rcr.label }}</h1>
 
     <h2>Statistiques</h2>
@@ -26,18 +27,9 @@
         {% if not batch %}
             <p>Jamais joué : <a href="{{ url("admin_batch_new", {ilnCode: rcr.iln.code, rcrCode: rcr.code, batchType: batchType})}}">Jouer maintenant</a></p>
         {% else %}
-            <table class="table"><tr>
-                    <td><span class="badge badge-{{ batch.statusClass }}">{{ batch.statusLabel }}</span></td>
-                    <td>{{ batch.runDate | date("Y-m-d H:i:s")}}</td>
-                    <td><span class="badge badge-info">{{ batch.countRecords }} records</span></td>
-                    <td><span class="badge badge-info">{{ batch.countErrors }} errors</span></td>
-                    <td>
-                        {% if batch.status == constant('App\\Entity\\BatchImport::STATUS_FINISHED') %}
-                            <a href="{{ url("admin_batch_action", {ilnCode: rcr.iln.code, rcrCode: rcr.code, batchId: batch.id, action: 'delete'}) }}" class="btn btn-danger btn-sm">supprimer les notices</a>
-                        {% endif %}
-                        &nbsp;
-                    </td>
-                </tr>
+            <table class="table">
+            {% include "admin/_batch_header.html.twig" %}
+            {% include "admin/_batch.html.twig" with {'batch': batch}%}
             </table>
         {% endif %}
     {% endfor %}

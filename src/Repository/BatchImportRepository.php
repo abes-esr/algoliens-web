@@ -23,7 +23,7 @@ class BatchImportRepository extends ServiceEntityRepository
     {
         return $this->findBy(array(),
             array(
-                'runDate' => 'DESC',
+                'startDate' => 'DESC',
             )
         );
     }

@@ -1,0 +1,30 @@
+<tr>
+    <td><span class="badge badge-{{ batch.statusClass }}">{{ batch.statusLabel }}</span></td>
+    <td>
+        {{ batch.startDate | date("Y-m-d H:i:s")}}
+    </td>
+    <td>
+        {% if batch.endDate %}
+            {{ batch.endDate | date("Y-m-d H:i:s") }}
+        {% else %}
+            &mdash;
+        {% endif %}
+    </td>
+    <td>
+        {% if batch.endDate %}
+            {{ batch.durationAsString }}
+        {% else %}
+            {{ batch.startedSince }} <small>(<a href="{{ app.request.uri }}">rafraîchir</a>)</small>
+        {% endif %}
+    </td>
+    <td><span class="badge badge-info">{{ batch.countRecords }} records</span></td>
+    <td><span class="badge badge-info">{{ batch.countErrors }} errors</span></td>
+    <td>
+        {% if batch.status == constant('App\\Entity\\BatchImport::STATUS_FINISHED') %}
+            <a href="{{ url("admin_batch_action", {ilnCode: batch.rcr.iln.code, rcrCode: batch.rcr.code, batchId: batch.id, action: 'deleterecords'}) }}" class="btn btn-danger btn-sm">supprimer les notices</a>
+        {% elseif batch.status == constant('App\\Entity\\BatchImport::STATUS_CANCEL') %}
+            <a href="{{ url("admin_batch_action", {ilnCode: batch.rcr.iln.code, rcrCode: batch.rcr.code, batchId: batch.id, action: 'deletebatch'}) }}" class="btn btn-outline-danger btn-sm">supprimer le batch</a>
+        {% endif %}
+        &nbsp;
+    </td>
+</tr>

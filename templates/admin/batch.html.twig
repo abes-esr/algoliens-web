@@ -6,7 +6,11 @@
 <div class="example-wrapper">
     {% if confirm is null %}
         <div class="alert alert-danger ">
-            En supprimant cet import, vous supprimerez les <strong>{{ batchImport.countRecords }} notices associées</strong>
+            {% if action == "deleterecords" %}
+                En supprimant cet import, vous supprimerez les <strong>{{ batchImport.countRecords }} notices associées</strong>
+            {% elseif action == "deletebatch" %}
+                Êtes-vous sûr·e de vouloir supprimer ce batch de la base de données ?
+            {% endif %}
         </div>
         <a href="{{ url('admin_batch_action', {ilnCode: batchImport.rcr.iln.code, rcrCode: batchImport.rcr.code, batchId: batchImport.id, action: action, confirm: 'confirm'}) }}" class="btn btn-primary">Confirmer</a>
         -

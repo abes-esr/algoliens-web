@@ -31,11 +31,12 @@
         {% endfor %}
     </table>
     <h2>Derniers imports</h2>
-    <ul>
+    <table class="table">
+        {% include "admin/_batch_header.html.twig" %}
     {% for import in imports %}
-        <li>{{ import.rcr.code }}</li>
+            {% include "admin/_batch.html.twig" with {'batch': import}%}
     {% endfor %}
-    </ul>
+    </table>
 
 </div>
 {% endblock %}

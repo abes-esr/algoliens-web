@@ -31,11 +31,6 @@ class BatchImport
     private $id;
 
     /**
-     * @ORM\Column(type="datetime")
-     */
-    private $runDate;
-
-    /**
      * @ORM\ManyToOne(targetEntity="App\Entity\Rcr", inversedBy="batchImports")
      * @ORM\JoinColumn(nullable=false)
      */
@@ -62,21 +57,31 @@ class BatchImport
     private $countErrors;
 
     /**
-     * @ORM\Column(type="float", nullable=true)
-     */
-    private $duration;
-
-    /**
      * @ORM\Column(type="smallint")
      */
     private $status;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $endDate;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $startDate;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $url;
 
     public function __construct(Rcr $rcr = null, int $type = null, EntityManagerInterface $em = null)
     {
         $this->records = new ArrayCollection();
         $this->setRcr($rcr);
         $this->setType($type);
-        $this->setRunDate(new \DateTime());
+        $this->setStartDate(new \DateTime());
         $this->setCountRecords(0);
         $this->setCountErrors(0);
     }
@@ -84,18 +89,6 @@ class BatchImport
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getRunDate(): ?\DateTimeInterface
-    {
-        return $this->runDate;
-    }
-
-    public function setRunDate(\DateTimeInterface $runDate): self
-    {
-        $this->runDate = $runDate;
-
-        return $this;
     }
 
     public function getRcr(): ?Rcr
@@ -187,16 +180,19 @@ class BatchImport
         return $this;
     }
 
-    public function getDuration(): ?float
+    public function getDurationAsString(): string
     {
-        return $this->duration;
+        return $this->getDuration()->format("%Imin %ss");
     }
 
-    public function setDuration(?float $duration): self
+    public function getDuration()
     {
-        $this->duration = $duration;
+        return $this->getStartDate()->diff($this->getEndDate());
+    }
 
-        return $this;
+    public function getStartedSince()
+    {
+        return $this->getStartDate()->diff(new \DateTime())->format("%Imin %ss");
     }
 
     public function getIlnCode(): string
@@ -228,7 +224,7 @@ class BatchImport
     {
         switch ($this->status) {
             case BatchImport::STATUS_CANCEL:
-                return "warning";
+                return "danger";
             case BatchImport::STATUS_FINISHED:
                 return "success";
             case BatchImport::STATUS_ERROR:
@@ -241,6 +237,42 @@ class BatchImport
     public function setStatus(int $status): self
     {
         $this->status = $status;
+
+        return $this;
+    }
+
+    public function getEndDate(): ?\DateTimeInterface
+    {
+        return $this->endDate;
+    }
+
+    public function setEndDate(?\DateTimeInterface $endDate): self
+    {
+        $this->endDate = $endDate;
+
+        return $this;
+    }
+
+    public function getStartDate(): ?\DateTimeInterface
+    {
+        return $this->startDate;
+    }
+
+    public function setStartDate(?\DateTimeInterface $startDate): self
+    {
+        $this->startDate = $startDate;
+
+        return $this;
+    }
+
+    public function getUrl(): ?string
+    {
+        return $this->url;
+    }
+
+    public function setUrl(?string $url): self
+    {
+        $this->url = $url;
 
         return $this;
     }

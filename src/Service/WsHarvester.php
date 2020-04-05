@@ -113,7 +113,10 @@
             $url = $this->getUrl()."&rownum=".$rownum;
             $client = HttpClient::create();
             try {
-                $response = $client->request('GET', $url."&rownum=".$rownum, [
+                $currentUrl = $url."&rownum=".$rownum;
+
+                $this->batchImport->setUrl($currentUrl);
+                $response = $client->request('GET', $currentUrl, [
                     'max_duration' => 0
                 ]);
                 $content = $response->getContent();
@@ -124,21 +127,32 @@
             return $content;
         }
 
-        public function runNewBatch(Rcr $rcr, int $batchType) {
+        public function runNewBatchAlreadyCreated(BatchImport $batchImport) {
             $startTime = microtime(true);
+            $this->batchImport = $batchImport;
 
-            $this->batchImport = new BatchImport($rcr, $batchType);
-            $this->batchImport->setRunDate(new \DateTime());
+            $this->batchImport->setStartDate(new \DateTime());
             $this->batchImport->setStatus(BatchImport::STATUS_RUNNING);
+
             $this->em->persist($this->batchImport);
             $this->em->flush();
 
             $content = $this->getApiContent();
             $this->processContent($content);
-            $this->batchImport->setDuration(microtime(true) - $startTime);
+            $this->batchImport->setEndDate(new \DateTime());
             $this->batchImport->setStatus(BatchImport::STATUS_FINISHED);
             $this->em->persist($this->batchImport);
             $this->em->flush();
+
+            $this->em->getRepository(Rcr::class)->updateStats($this->batchImport->getRcr());
+            $this->em->persist($this->batchImport->getRcr());
+
+            $this->em->flush();
             return $this->batchImport;
+        }
+
+        public function runNewBatch(Rcr $rcr, int $batchType) {
+            $batchImport = new BatchImport($rcr, $batchType);
+            return $this->runNewBatchAlreadyCreated($batchImport);
         }
     }

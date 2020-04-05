@@ -69,6 +69,15 @@ class IndexController extends AbstractController
     }
 
     /**
+     * @Route("/iln/015", name="view_iln_legacy")
+     */
+    public function ilnViewLegacy(IlnRepository $ilnRepository)
+    {
+        $iln = $ilnRepository->findOneBy(["number" => 15]);
+        return $this->redirect($this->generateUrl("view_iln", ["code" => $iln->getCode(), "secret" => $iln->getSecret()]));
+    }
+
+    /**
      * @Route("/chantier/{code}-{secret}", name="view_iln")
      */
     public function ilnView(Iln $iln)

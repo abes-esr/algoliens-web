@@ -68,8 +68,10 @@ class AjaxController extends AbstractController
      * @Route("/ajax/veriflocal/{ppn}/{rcr}", name="verif_loca")
      */
     public function check(string $ppn, string $rcr) {
-        $json = file_get_contents(sprintf("https://www.sudoc.fr/services/multiwhere/%s&format=text/json", $ppn));
+        $url = sprintf("https://www.sudoc.fr/services/multiwhere/%s&format=text/json", $ppn);
+        $json = file_get_contents($url);
         $holdings = json_decode($json);
+
         $li = "";
         foreach ($holdings->sudoc->query->result as $result) {
             if ($result->rcr == $rcr) {

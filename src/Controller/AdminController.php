@@ -11,8 +11,15 @@ use App\Repository\RcrRepository;
 use App\Repository\RecordRepository;
 use App\Service\WsHarvester;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Contracts\EventDispatcher\Event;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\HttpKernel\KernelInterface;
+use Symfony\Component\Process\PhpExecutableFinder;
+use Symfony\Component\Process\Process;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
@@ -63,21 +70,47 @@ class AdminController extends AbstractController
      * @Route("/iln/{ilnCode}/rcr/{rcrCode}/batch/new/{batchType}", name="admin_batch_new")
      * @Entity("rcr", expr="repository.findOneBy({'code': rcrCode})")
      */
-    public function batchNew(Rcr $rcr, $batchType, WsHarvester $wsHarvester) {
-//        $batch = $wsHarvester->runNewBatch($rcr, $batchType);
+    public function batchNew(Rcr $rcr, $batchType, KernelInterface $kernel, EventDispatcherInterface $eventDispatcher, LoggerInterface $logger, EntityManagerInterface $em) {
+
+        $batchImport = new BatchImport($rcr, $batchType);
+        $batchImport->setStatus(BatchImport::STATUS_RUNNING);
+        $em->persist($batchImport);
+        $em->flush();
+
+        $eventDispatcher->addListener(KernelEvents::TERMINATE, function (Event $event) use ($logger, $batchImport, $em) {
+            // Launch the job
+            $wsHarvester = new WsHarvester($em);
+            $wsHarvester->runNewBatchAlreadyCreated($batchImport);
+            $logger->info("PROC START");
+            $logger->info($process->getCommandLine());
+            $process->start();
+            $logger->info("PROC WAIT");
+            $process->wait();
+            $logger->info("PROC FINISH");
+
+            $logger->info($process->getOutput());
+
+        });
+        return $this->redirect($this->generateUrl("admin_rcr", ["ilnCode" => $rcr->getIln()->getCode(), "rcrCode" => $rcr->getCode()]));
     }
 
     /**
      * @Route("/iln/{ilnCode}/rcr/{rcrCode}/batch/{batchId}/{action}/{confirm?}", name="admin_batch_action")
      * @Entity("batchImport", expr="repository.findOneBy({'id': batchId})")
      */
-    public function batch(EntityManagerInterface $em, RcrRepository $rcrRepository, RecordRepository $recordRepository, BatchImport $batchImport, string $action, string $confirm = null) {
+    public function batch(EntityManagerInterface $em, BatchImport $batchImport, string $action, string $confirm = null) {
         if ($confirm == "confirm") {
-            $recordRepository->deleteForBatch($batchImport);
-            $rcrRepository->updateStats($batchImport->getRcr());
-            $batchImport->setStatus(BatchImport::STATUS_CANCEL);
-            $em->persist($batchImport);
+            if ($action == "deleterecords") {
+                $this->getDoctrine()->getRepository(Record::class)->deleteForBatch($batchImport);
+                $this->getDoctrine()->getRepository(Rcr::class)->updateStats($batchImport->getRcr());
+
+                $batchImport->setStatus(BatchImport::STATUS_CANCEL);
+                $em->persist($batchImport);
+            } elseif ($action == "deletebatch") {
+                $em->remove($batchImport);
+            }
             $em->flush();
+
             return $this->redirect(
                 $this->generateUrl("admin_rcr", ["ilnCode" => $batchImport->getIlnCode(), "rcrCode" => $batchImport->getRcr()->getCode()])
             );
