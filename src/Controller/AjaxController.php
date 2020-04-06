@@ -69,11 +69,20 @@ class AjaxController extends AbstractController
      */
     public function check(string $ppn, string $rcr) {
         $url = sprintf("https://www.sudoc.fr/services/multiwhere/%s&format=text/json", $ppn);
+        print $url;
         $json = file_get_contents($url);
         $holdings = json_decode($json);
 
         $li = "";
-        foreach ($holdings->sudoc->query->result as $result) {
+        if (is_array($holdings->sudoc->query->result->library)) {
+            foreach ($holdings->sudoc->query->result->library as $result) {
+                if ($result->rcr == $rcr) {
+                    return new Response("");
+                }
+            }
+            $li .= "<li>".$result->rcr." - ".$result->shortname."</li>";
+        } else {
+            $result = $holdings->sudoc->query->result->library;
             if ($result->rcr == $rcr) {
                 return new Response("");
             }
