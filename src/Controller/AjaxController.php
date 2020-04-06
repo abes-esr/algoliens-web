@@ -69,7 +69,6 @@ class AjaxController extends AbstractController
      */
     public function check(string $ppn, string $rcr) {
         $url = sprintf("https://www.sudoc.fr/services/multiwhere/%s&format=text/json", $ppn);
-        print $url;
         $json = file_get_contents($url);
         $holdings = json_decode($json);
 
