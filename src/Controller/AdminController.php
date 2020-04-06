@@ -25,7 +25,7 @@ use Symfony\Component\Process\Process;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * @Route("/adminavril")
+ * @Route("/admin")
  */
 
 class AdminController extends AbstractController
