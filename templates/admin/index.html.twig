@@ -5,28 +5,37 @@
 {% block body %}
     {% include "admin/_breadcrumb.html.twig" %}
 <style>
-    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
+    .example-wrapper { margin: 1em auto; width: 95%; font: 18px/1.5 sans-serif; }
     .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
 </style>
 
 <div class="example-wrapper">
     <h1>Admin</h1>
     <h2>Accès par ILN / Chantier</h2>
-    <table class="table">
+    <table class="table text-center">
         <tr>
-            <th>Code</th>
-            <th>Label</th>
-            <th>RCR</th>
-            <th>Admin</th>
-            <th>Accès public</th>
+            <th rowspan="2">Code</th>
+            <th rowspan="2">Label</th>
+            <th rowspan="2">RCR</th>
+            <th colspan="3">Décompte</th>
+            <th rowspan="2">Admin</th>
+            <th rowspan="2">Public</th>
+        </tr>
+        <tr>
+            <th>Notices</th>
+            <th>Corrigées</th>
+            <th>À reprendre</th>
         </tr>
         {% for iln in ilns %}
             <tr>
                 <td>{{ iln.code }}</td>
                 <td>{{ iln.label }}</td>
                 <td>{{ iln.rcrs | length }}</td>
-                <td><a href="{{ url('admin_iln', {code: iln.code}) }}">admin</a></td>
-                <td><a href="{{ url('view_iln', {code: iln.code, secret: iln.secret}) }}">public</a></td>
+                <td>{{ iln.getNumberOfRecords }}</td>
+                <td>{{ iln.getNumberOfRecordsCorrected }}</td>
+                <td>{{ iln.getNumberOfRecordsReprise }}</td>
+                <td class="text-center"><a href="{{ url('admin_iln', {code: iln.code}) }}">go</a></td>
+                <td class="text-center"><a href="{{ url('view_iln', {code: iln.code, secret: iln.secret}) }}">go</a></td>
             </tr>
         {% endfor %}
     </table>

@@ -144,6 +144,10 @@ class Iln
         return array_reduce($this->getRcrs()->getValues(), function ($total, $rcr) { $total += $rcr->getNumberOfRecordsHandled(); return $total; });
     }
 
+    public function getNumberOfRecordsReprise() {
+        return array_reduce($this->getRcrs()->getValues(), function ($total, $rcr) { $total += $rcr->getNumberOfRecordsReprise(); return $total; });
+    }
+
     public function getSecret(): ?string
     {
         return $this->secret;
