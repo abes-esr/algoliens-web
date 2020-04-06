@@ -12,7 +12,13 @@
         <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom box-shadow">
             <h1 class="my-0 mr-md-auto font-weight-normal"><a href="{{ url("home") }}">Algoliens web</a></h1>
             <nav class="my-2 my-md-0 mr-md-3">
-                {% include "header_settings.html.twig" %}
+                {%  set ilnHeader = null %}
+                {% if iln is defined %}
+                    {%  set ilnHeader = iln %}
+                {% elseif rcr is defined %}
+                    {% set ilnHeader = rcr.iln %}
+                {% endif %}
+                {% include "header_settings.html.twig" with {iln: ilnHeader} %}
             </nav>
         </div>
             {% block header %}

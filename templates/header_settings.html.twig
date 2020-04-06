@@ -1,14 +1,13 @@
+{% if iln is not null and app.session.has("winnie") %}
 <div class="row">
     <div class="col small">
-        {% if not app.session.has("winnie") %}
-        {% else %}
             Winibw disponible sur mon poste :
             {% if app.session.get("winnie") %}
                 <span class="text-success">&#10004; </span>
             {% else %}
                 <span class="text-danger">&#10060; </span>
             {% endif %}
-            (<a href="{{ url("settings") }}">modifier</a>)
-        {% endif %}
+            (<a href="{{ url("settings", {"code": iln.code, "secret": iln.secret}) }}">modifier</a>)
     </div>
 </div>
+{% endif %}

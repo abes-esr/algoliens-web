@@ -21,7 +21,7 @@
             <th>Reste à traiter</th>
             <th>À reprendre document en main</th>
         </tr>
-    {% for rcr in iln.getRcrs() %}
+    {% for rcr in iln.getRcrsWithRecords() %}
         <tr>
            <td>{{ rcr.code }}</td>
             <td><a href="{{  url('view_rcr', {ilnCode: iln.code, rcrCode: rcr.code, secret: iln.secret}) }}">{{ rcr.label }}</a></td>

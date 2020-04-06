@@ -98,6 +98,17 @@ class Iln
         return $output;
     }
 
+    /**
+     * @return Collection|Rcr[]
+     */
+    public function getRcrsWithRecords(): Collection
+    {
+        $output = $this->rcrs->filter(function($rcr) { return (($rcr->getActive() == 1) and ($rcr->getNumberOfRecords() > 0)); });
+        return $output;
+    }
+
+
+
     public function addRcr(Rcr $rcr): self
     {
         if (!$this->rcrs->contains($rcr)) {

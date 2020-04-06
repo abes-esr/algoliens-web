@@ -171,6 +171,9 @@ class Rcr
 
     public function getNumberOfRecords(): ?int
     {
+        if (is_null($this->numberOfRecords)) {
+            return 0;
+        }
         return $this->numberOfRecords;
     }
 
@@ -183,6 +186,9 @@ class Rcr
 
     public function getNumberOfRecordsCorrected(): ?int
     {
+        if (is_null($this->numberOfRecordsCorrected)) {
+            return 0;
+        }
         return $this->numberOfRecordsCorrected;
     }
 
@@ -230,6 +236,9 @@ class Rcr
 
     public function getNumberOfRecordsReprise(): ?int
     {
+        if (is_null($this->numberOfRecordsReprise)) {
+            return 0;
+        }
         return $this->numberOfRecordsReprise;
     }
 

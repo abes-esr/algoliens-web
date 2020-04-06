@@ -7,6 +7,10 @@
     {% include "admin/_breadcrumb.html.twig" %}
     <h1>Admin</h1>
     <h2>Liste des RCR</h2>
+        {% if iln.rcrs | length == 0 %}
+            <p>Aucun RCR disponible</p>
+            <a href="{{ url("admin_iln_populate_rcr", {ilnCode: iln.code}) }}" class="btn btn-primary">Charger les RCR</a>
+        {% else %}
     <table class="table">
         <tr>
             <th rowspan="2">Code</th>
@@ -27,18 +31,18 @@
                 {% set batchCrea =  rcr.hasBatchRun(constant('App\\Entity\\BatchImport::TYPE_RCR_CREA')) %}
                 {% set batchUnica =  rcr.hasBatchRun(constant('App\\Entity\\BatchImport::TYPE_UNICA')) %}
                 <td>
-                {% if not batchCrea %}
-                    <span class="badge badge-danger">&#10006;</span>
+                    {% if not batchCrea %}
+                        <span class="badge badge-danger">&#10006;</span>
                     {% else %}
-                    <span class="badge badge-success">&#x2714;</span>
-                {% endif %}
+                        <span class="badge badge-success">&#x2714;</span>
+                    {% endif %}
                 </td>
                 <td>
-                {% if not batchUnica %}
-                    <span class="badge badge-danger">&#10006;</span>
-                {% else %}
-                    <span class="badge badge-success">&#x2714;</span>
-                {% endif %}
+                    {% if not batchUnica %}
+                        <span class="badge badge-danger">&#10006;</span>
+                    {% else %}
+                        <span class="badge badge-success">&#x2714;</span>
+                    {% endif %}
                 </td>
                 <td>
                     <a href="{{ url('admin_rcr', {'ilnCode': iln.code, 'rcrCode': rcr.code}) }}">voir le détail</a>
@@ -46,5 +50,7 @@
             </tr>
         {% endfor %}
     </table>
+
+        {% endif %}
 </div>
 {% endblock %}

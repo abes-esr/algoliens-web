@@ -127,27 +127,34 @@
             return $content;
         }
 
-        public function runNewBatchAlreadyCreated(BatchImport $batchImport) {
-            $startTime = microtime(true);
+        public function runNewBatchAlreadyCreated(BatchImport $batchImport, $logger) {
             $this->batchImport = $batchImport;
+            $logger->debug("START");
+            $logger->debug("A : ".$this->batchImport->getStartDate()->format("Y-m-d H:i:s"));
 
             $this->batchImport->setStartDate(new \DateTime());
             $this->batchImport->setStatus(BatchImport::STATUS_RUNNING);
+            $logger->debug("B : ".$this->batchImport->getStartDate()->format("Y-m-d H:i:s"));
 
             $this->em->persist($this->batchImport);
             $this->em->flush();
 
             $content = $this->getApiContent();
+            $logger->debug("C : ".$this->batchImport->getStartDate()->format("Y-m-d H:i:s"));
+
             $this->processContent($content);
             $this->batchImport->setEndDate(new \DateTime());
             $this->batchImport->setStatus(BatchImport::STATUS_FINISHED);
             $this->em->persist($this->batchImport);
             $this->em->flush();
+            $logger->debug("D : ".$this->batchImport->getStartDate()->format("Y-m-d H:i:s"));
 
             $this->em->getRepository(Rcr::class)->updateStats($this->batchImport->getRcr());
             $this->em->persist($this->batchImport->getRcr());
 
             $this->em->flush();
+            $logger->debug("E : ".$this->batchImport->getStartDate()->format("Y-m-d H:i:s"));
+
             return $this->batchImport;
         }
 

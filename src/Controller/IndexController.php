@@ -33,9 +33,9 @@ class IndexController extends AbstractController
     }
 
     /**
-     * @Route("/params", name="settings")
+     * @Route("/chantier/{code}-{secret}/params", name="settings")
      */
-    public function settings(Request $request)
+    public function settings(Request $request, $code, $secret)
     {
         $form = $this->createFormBuilder();
         $session = $request->getSession();
@@ -62,7 +62,7 @@ class IndexController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $settingsData = $form->getData();
             $session->set("winnie", $settingsData["winnie"]);
-            return $this->redirect($this->generateUrl("view_all_ilns"));
+            return $this->redirect($this->generateUrl("view_iln", ["code" => $code, "secret" => $secret]));
         }
 
         return $this->render("settings.html.twig", ["form" => $form->createView()]);
@@ -80,8 +80,12 @@ class IndexController extends AbstractController
     /**
      * @Route("/chantier/{code}-{secret}", name="view_iln")
      */
-    public function ilnView(Iln $iln)
+    public function ilnView(Request $request, Iln $iln)
     {
+        $session = $request->getSession();
+        if (!$session->has("winnie")) {
+            return $this->redirect($this->generateUrl("settings", ["code" => $iln->getCode(), "secret" => $iln->getSecret()]));
+        }
         return $this->render("iln.html.twig", ["iln" => $iln]);
     }
 

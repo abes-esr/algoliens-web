@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\BatchImport;
 use App\Entity\Iln;
 use App\Entity\Rcr;
+use App\Entity\Record;
 use App\Repository\BatchImportRepository;
 use App\Repository\IlnRepository;
 use App\Repository\RcrRepository;
@@ -14,6 +15,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\EventDispatcher\Event;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -23,7 +25,7 @@ use Symfony\Component\Process\Process;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * @Route("/admin")
+ * @Route("/adminavril")
  */
 
 class AdminController extends AbstractController
@@ -79,16 +81,11 @@ class AdminController extends AbstractController
 
         $eventDispatcher->addListener(KernelEvents::TERMINATE, function (Event $event) use ($logger, $batchImport, $em) {
             // Launch the job
-            $wsHarvester = new WsHarvester($em);
-            $wsHarvester->runNewBatchAlreadyCreated($batchImport);
-            $logger->info("PROC START");
-            $logger->info($process->getCommandLine());
-            $process->start();
-            $logger->info("PROC WAIT");
-            $process->wait();
-            $logger->info("PROC FINISH");
 
-            $logger->info($process->getOutput());
+            $wsHarvester = new WsHarvester($em);
+            $wsHarvester->runNewBatchAlreadyCreated($batchImport, $logger);
+
+            $logger->debug("G : ".$batchImport->getStartDate()->format("Y-m-d H:i:s"));
 
         });
         return $this->redirect($this->generateUrl("admin_rcr", ["ilnCode" => $rcr->getIln()->getCode(), "rcrCode" => $rcr->getCode()]));
@@ -120,5 +117,33 @@ class AdminController extends AbstractController
             'action' => $action,
             'confirm' => $confirm
         ]);
+    }
+
+    /**
+     * @Route("/iln/{ilnCode}/import-rcr", name="admin_iln_populate_rcr")
+     * @Entity("iln", expr="repository.findOneBy({'code': ilnCode})")
+     */
+    public function ilnPopulateWithRcr(Iln $iln, EntityManagerInterface $em, Request $request) {
+        $rcrJson = file_get_contents("https://www.idref.fr/services/iln2rcr/".$iln->getNumber()."&format=text/json");
+        $rcrArray = json_decode($rcrJson);
+
+        $count = 0;
+        foreach ($rcrArray->sudoc->query->result as $rcrDescription) {
+            $rcr = new Rcr();
+            $rcr->setCode($rcrDescription->library->rcr);
+            $rcr->setLabel($rcrDescription->library->shortname);
+            $rcr->setUpdated(new \DateTime());
+            $rcr->setIln($iln);
+            $rcr->setHarvested(0);
+            $rcr->setActive(1);
+            $em->persist($rcr);
+            $count++;
+        }
+        $em->flush();
+
+        $session = $request->getSession();
+        $session->getFlashBag()->add('success', $count." RCR ajoutés.");
+
+        return $this->redirect($this->generateUrl("admin"));
     }
 }
