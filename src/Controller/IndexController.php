@@ -99,7 +99,7 @@ class IndexController extends AbstractController
         $unlockedRecords = $recordRepository->forceUnlockRecordsForRcr($rcr);
         $session = $request->getSession();
         $session->getFlashBag()->add('success', $unlockedRecords." notices libérées.");
-        return $this->redirect($this->generateUrl('view_rcr', ['ilnCode' => $iln->getCode(), 'rcrCode' => $rcr->getCode()]));
+        return $this->redirect($this->generateUrl('view_rcr', ['ilnCode' => $iln->getCode(), 'rcrCode' => $rcr->getCode(), "secret" => $iln->getSecret()]));
     }
 
 
