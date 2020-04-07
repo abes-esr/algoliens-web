@@ -25,6 +25,12 @@
     {% if empty %}
         <div>
             <p><strong>Plus aucune notice à traiter pour ce RCR !</strong></p>
+            {% if not app.session.get("winnie") %}
+                {%  if rcr.numberOfRecordsAvailable  %}
+                <p>Il reste {{ rcr.numberOfRecordsAvailable }} marquées comme à traiter pour ce RCR mais elles contiennent des erreurs qui nécessitent WinIBW qui ne semble pas installé sur votre poste (<a href="{{ url("settings", {code: iln.code, secret: iln.secret}) }}">modifier ce paramètre</a>)</p>
+                {% endif %}
+            {% endif %}
+
             {% if lockedRecords|length > 0 %}
                 <div class="alert alert-warning">
                     <p>
