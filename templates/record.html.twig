@@ -5,8 +5,10 @@
         var url_raw_record = "{{ url("raw_record", {'ppn': record.ppn}) }}";
 
         var url_is_localized = "";
-        {% if record.batchImport.typeLabel == "RCR CRÉATEUR" %}
-            var url_is_localized = "{{ url("verif_loca", {'ppn': record.ppn, 'rcr': rcr.code}) }}";
+        {% if record.batchImport is not null%}
+            {% if record.batchImport.typeLabel == "RCR CRÉATEUR" %}
+                var url_is_localized = "{{ url("verif_loca", {'ppn': record.ppn, 'rcr': rcr.code}) }}";
+            {% endif %}
         {% endif %}
     </script>
 
@@ -37,7 +39,7 @@
                     </ul>
                 </p>
                 <p>
-                    Si vous le souhaitez, vous pouvez <a href="{{ url("force_unlock", {iln: iln.code, rcr: rcr.code}) }}" class="btn btn-info">forcer le déblocage</a> de ces notices.
+                    Si vous le souhaitez, vous pouvez <a href="{{ url("force_unlock", {ilnCode: iln.code, rcrCode: rcr.code, ilnSecret: iln.secret}) }}" class="btn btn-info">forcer le déblocage</a> de ces notices.
                 </p>
                 </div>
             {% endif %}
@@ -55,16 +57,18 @@
                     </div>
                 {% endif %}
         <p>Information sur le document : <span class="badge badge-info">{{ record.docTypeLabel }}</span>
-            <span class="badge badge-primary">{{ record.batchImport.typeLabel }}</span>
+            {% if record.batchImport %}<span class="badge badge-primary">{{ record.batchImport.typeLabel }}</span>{% endif %}
         </p>
                 <p>
                     La notice n°<a target="_blank" href="http://www.sudoc.fr/{{ record.ppn }}">{{ record.ppn }}</a> vous est proposée car
-                {% if record.batchImport.typeLabel == "UNICA" %}
-                    le RCR {{ rcr.code }} est le seul établissement du réseau localisé dessus
-                {% else %}
-                    le RCR {{ rcr.code }} en est le créateur
-                {% endif %}
-                    et qu'elle comporte les erreurs suivantes :</p>
+                    {% if record.batchImport %}
+                        {% if record.batchImport.typeLabel == "UNICA" %}
+                            le RCR {{ rcr.code }} est le seul établissement du réseau localisé dessus  et qu'
+                        {% else %}
+                            le RCR {{ rcr.code }} en est le créateur et qu'
+                        {% endif %}
+                    {% endif %}
+                    elle comporte les erreurs suivantes :</p>
                 <ul>
                 {% for linkError in record.linkErrors %}
                     <li><strong>{{ linkError.errorCode }}</strong> : au moins {{ linkError.errorText }};</li>

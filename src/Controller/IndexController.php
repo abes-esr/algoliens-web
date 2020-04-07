@@ -90,9 +90,9 @@ class IndexController extends AbstractController
     }
 
     /**
-     * @Route("/chantier/{code}-{secret}/rcr/{rcr}/unlock", name="force_unlock")
-     * @Entity("iln", expr="repository.findOneBy({'code': iln})")
-     * @Entity("rcr", expr="repository.findOneBy({'code': rcr})")
+     * @Route("/chantier/{ilnCode}-{ilnSecret}/rcr/{rcrCode}/unlock", name="force_unlock")
+     * @Entity("iln", expr="repository.findOneBy({'code': ilnCode})")
+     * @Entity("rcr", expr="repository.findOneBy({'code': rcrCode})")
      */
     public function forceUnlock(Rcr $rcr, Iln $iln, RecordRepository $recordRepository, Request $request)
     {
