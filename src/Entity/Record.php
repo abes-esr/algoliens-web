@@ -10,6 +10,7 @@ use Doctrine\ORM\Mapping\Index;
 /**
  * @ORM\Entity(repositoryClass="App\Repository\RecordRepository")
  * @ORM\Table(indexes={@Index(name="idx_ppn", columns={"ppn"})})
+ * @ORM\HasLifecycleCallbacks()
  */
 class Record
 {
@@ -18,7 +19,7 @@ class Record
     const SKIP_OTHER_REASON = 3;
 
     /**
-     * @ORM\Column(type="datetime", columnDefinition="DATETIME on update CURRENT_TIMESTAMP")
+     * @ORM\Column(type="datetime", nullable=true)
      */
     private $updatedAt;
 
@@ -323,4 +324,11 @@ class Record
         return $this;
     }
 
+
+    /**
+     * @ORM\PreUpdate()
+     */
+    public function setUpdatedAt() {
+        $this->updatedAt = new \DateTime();
+    }
 }
