@@ -192,6 +192,9 @@ class BatchImport
 
     public function getStartedSince()
     {
+        if (is_null($this->getStartDate())) {
+            return null;
+        }
         return $this->getStartDate()->diff(new \DateTime())->format("%Imin %ss");
     }
 
