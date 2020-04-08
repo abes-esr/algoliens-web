@@ -122,6 +122,9 @@
                         {% if countLinks == 1 %}
                             </ul>
                             {% endif %}
+                    <p>Si vous ne souhaitez pas corriger cette notice maintenant mais souhaitez qu'elle soit à nouveau proposée plus tard dans le cadre de chantier, vous pouvez la laisser de côté pour le moment :
+                        <br/><a href="{{ app.request.uri }}" class="btn btn-outline-primary">Voir une autre notice</a>
+                    </p>
                 </div>
             </div>
 
@@ -138,7 +141,7 @@
                 {{ form_widget(form.validate) }}
             </div>
             <div class="col-6 text-left" style="border-left:2px solid grey">
-                <h3>Option 2 : notice à reprendre</h3>
+                <h3>Option 2 : notice non traitée</h3>
                     {{ form_row(form.skipReason) }}
                     {{ form_row(form.comment) }}
                     {{ form_widget(form.skip) }}

@@ -30,12 +30,13 @@ class RecordType extends AbstractType
             ->add('winnie')
             ->add('rcrCreate')*/
             ->add('skipReason', ChoiceType::class, [
-                'label' => "Notice non traitée pour le moment : ",
-                'choices'  => [
+                'label' => "Raison du non traitement :",
+                      'choices'  => [
                     'À reprendre document en main' => Record::SKIP_PHYSICAL_NEEDED,
                     'Proposer à nouveau dans cette interface plus tard' => Record::SKIP_OTHER_REASON,
                 ],
-                'mapped' => false
+                'mapped' => false,
+                'expanded' => true
             ])
             ->add('id', HiddenType::class)
             ->add("validate", SubmitType::class,
