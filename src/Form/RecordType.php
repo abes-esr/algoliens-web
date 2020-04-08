@@ -3,6 +3,8 @@
 namespace App\Form;
 
 use App\Entity\Record;
+use App\Entity\SkipReason;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
@@ -17,6 +19,7 @@ class RecordType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
+        $record = $builder->getData();
         $builder
             /*->add('ppn')
             ->add('status')
@@ -29,15 +32,6 @@ class RecordType extends AbstractType
             ->add('urlCallType')
             ->add('winnie')
             ->add('rcrCreate')*/
-            ->add('skipReason', ChoiceType::class, [
-                'label' => "Raison du non traitement :",
-                      'choices'  => [
-                    'À reprendre document en main' => Record::SKIP_PHYSICAL_NEEDED,
-                    'Proposer à nouveau dans cette interface plus tard' => Record::SKIP_OTHER_REASON,
-                ],
-                'mapped' => false,
-                'expanded' => true
-            ])
             ->add('id', HiddenType::class)
             ->add("validate", SubmitType::class,
                 [
@@ -55,11 +49,19 @@ class RecordType extends AbstractType
                 ])
             ->add("comment", TextareaType::class,
                 [
-                    'label' => "Commentaire",
+                    'label' => "Commentaire : ",
                     'required' => false
                 ]
-            )
-        ;
+            );
+        if (sizeof($record->getRcrCreate()->getIln()->getSkipReasons()) > 0) {
+            $builder->add('skipReason', EntityType::class, [
+                'class' => SkipReason::class,
+                'label' => "Raison du non traitement : ",
+                'choices' => $record->getRcrCreate()->getIln()->getSkipReasons(),
+                'expanded' => true
+            ]);
+        }
+
     }
 
     public function configureOptions(OptionsResolver $resolver)

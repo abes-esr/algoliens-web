@@ -43,9 +43,15 @@ class Iln
      */
     private $secret;
 
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\SkipReason", mappedBy="Iln")
+     */
+    private $skipReasons;
+
     public function __construct()
     {
         $this->rcrs = new ArrayCollection();
+        $this->skipReasons = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -156,6 +162,37 @@ class Iln
     public function setSecret(string $secret): self
     {
         $this->secret = $secret;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|SkipReason[]
+     */
+    public function getSkipReasons(): Collection
+    {
+        return $this->skipReasons;
+    }
+
+    public function addSkipReason(SkipReason $skipReason): self
+    {
+        if (!$this->skipReasons->contains($skipReason)) {
+            $this->skipReasons[] = $skipReason;
+            $skipReason->setIln($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSkipReason(SkipReason $skipReason): self
+    {
+        if ($this->skipReasons->contains($skipReason)) {
+            $this->skipReasons->removeElement($skipReason);
+            // set the owning side to null (unless already changed)
+            if ($skipReason->getIln() === $this) {
+                $skipReason->setIln(null);
+            }
+        }
 
         return $this;
     }

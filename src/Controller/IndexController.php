@@ -161,6 +161,7 @@ class IndexController extends AbstractController
             }
         } else {
             $record = new Record();
+            $record->setRcrCreate($rcr);
         }
 
         $form = $this->createForm(RecordType::class, $record);
@@ -182,18 +183,16 @@ class IndexController extends AbstractController
                     $countCorrected = 1 + $em->getRepository(Record::class)->countCorrectedForRcr($record->getRcrCreate());
                     $record->getRcrCreate()->setNumberOfRecordsCorrected($countCorrected);
                 } elseif ($submitButton->getName() == "skip") {
-                    $skipReason = $request->request->get("record")["skipReason"];
-                    if ($skipReason == Record::SKIP_PHYSICAL_NEEDED) {
-                        $session = $request->getSession();
-                        $session->getFlashBag()->add('success', "Cette notice ne sera plus proposée. Elle sera listée dans celles à reprendre document en main.");
-                        $record->setStatus(Record::SKIP_PHYSICAL_NEEDED);
-                        $record->setComment($recordForm->getComment());
-                        // On ajoute 1 pour tenir compte de la notice en cours
-                        $countReprise = 1 + $em->getRepository(Record::class)->countRepriseForRcr($record->getRcrCreate());
-                        $record->getRcrCreate()->setNumberOfRecordsReprise($countReprise);
-                    } else {
-                        $record->setLocked(null);
-                    }
+                    $skipReason = $recordForm->getSkipReason();
+                    $record->setStatus(Record::RECORD_SKIPPED);
+                    $record->setComment($recordForm->getComment());
+                    $record->setSkipReason($skipReason);
+                    // On ajoute 1 pour tenir compte de la notice en cours
+                    $countReprise = 1 + $em->getRepository(Record::class)->countRepriseForRcr($record->getRcrCreate());
+                    $record->getRcrCreate()->setNumberOfRecordsReprise($countReprise);
+
+                    $session = $request->getSession();
+                    $session->getFlashBag()->add('success', "Cette notice ne sera plus proposée. Elle sera listée dans celles à reprendre document en main.");
                 }
 
                 $em->persist($record);

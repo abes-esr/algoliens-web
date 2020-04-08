@@ -109,14 +109,14 @@ class RecordRepository extends ServiceEntityRepository
     }
 
     public function countRepriseForRcr(Rcr $rcr) {
-        return $this->countByStatusForRcr($rcr, Record::SKIP_PHYSICAL_NEEDED);
+        return $this->countByStatusForRcr($rcr, Record::RECORD_SKIPPED);
     }
 
     public function findRepriseNeeded(Rcr $rcr) {
         return $this->createQueryBuilder('l')
             ->where("l.status = :status and l.rcrCreate = :rcr")
             ->setParameter('rcr', $rcr)
-            ->setParameter('status', Record::SKIP_PHYSICAL_NEEDED)
+            ->setParameter('status', Record::RECORD_SKIPPED)
             ->getQuery()
             ->getResult();
     }

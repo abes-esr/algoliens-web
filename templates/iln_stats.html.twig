@@ -4,6 +4,17 @@
 
 {% block body %}
     {{ include("_breadcrumb.html.twig", {'page': 'stat'}) }}
+
+    {% if iln.skipReasons | length > 0 %}
+        <h1>Reprises à venir</h1>
+        <ul>
+        {% for skipReason in iln.skipReasons %}
+            <li>{{ skipReason.description }} : {{ skipReason.records|length }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+
+    <h1>Historique</h1>
     {% for year, yeardetail in stats %}
         {% set corrected = 0 %}
         {% set reprise = 0 %}

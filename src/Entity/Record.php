@@ -15,8 +15,7 @@ use Doctrine\ORM\Mapping\Index;
 class Record
 {
     const RECORD_VALIDATED = 1;
-    const SKIP_PHYSICAL_NEEDED = 2;
-    const SKIP_OTHER_REASON = 3;
+    const RECORD_SKIPPED = 2;
 
     /**
      * @ORM\Column(type="datetime", nullable=true)
@@ -106,6 +105,11 @@ class Record
      * @ORM\ManyToOne(targetEntity="App\Entity\BatchImport", inversedBy="records")
      */
     private $batchImport;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="App\Entity\SkipReason", inversedBy="records")
+     */
+    private $skipReason;
 
     public function __construct()
     {
@@ -330,5 +334,17 @@ class Record
      */
     public function setUpdatedAt() {
         $this->updatedAt = new \DateTime();
+    }
+
+    public function getSkipReason(): ?SkipReason
+    {
+        return $this->skipReason;
+    }
+
+    public function setSkipReason(?SkipReason $skipReason): self
+    {
+        $this->skipReason = $skipReason;
+
+        return $this;
     }
 }
