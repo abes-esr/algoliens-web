@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Record;
+use App\Service\WsHarvester;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -14,53 +15,20 @@ class AjaxController extends AbstractController
     /**
      * @Route("/ajax/rawrecord/{ppn}", name="raw_record")
      */
-    public function rawRecord(EntityManagerInterface $em, string $ppn)
+    public function rawRecord(EntityManagerInterface $em, WsHarvester $wsHarvester, string $ppn)
     {
-        $url = "http://www.sudoc.fr/".$ppn.".xml";
-        $xml = file_get_contents($url);
-        $record = new \SimpleXMLElement($xml);
-        $unimarc = "";
-        $title = "";
-        $year = "";
-
-        foreach ($record->datafield as $datafield) {
-            $tag = (string) $datafield->attributes()["tag"][0];
-            $unimarc .= $tag." ";
-            foreach ($datafield->subfield as $subfield) {
-                $code = (string) $subfield->attributes()["code"][0];
-                $value = (string) $subfield;
-
-                if ( ($tag == 100) && ($code == "a") ) {
-                    $year = substr($value, 9,4);
-                } elseif ( ($tag == 200) && ($code == "a") ) {
-                    $title = $value;
-                }
-                elseif ( ($tag == 210) && ($code == "d") ) {
-                    if ($year == '') {
-                        $year = $value;
-                    }
-                }
-
-                $unimarc .= "$$code $value ";
-            }
-            $unimarc .= "\n";
-        }
-
-
         $records = $this->getDoctrine()->getRepository(Record::class)->findBy(["ppn" => $ppn]);
         foreach ($records as $record) {
-            $record->setMarcBefore($unimarc);
-            $record->setTitle($title);
-            $record->setYear($year);
+            $record = $wsHarvester->populateRecordFromAbes($record);
             $em->persist($record);
         }
         $em->flush();
 
         return new JsonResponse([
             "ppn" => $ppn,
-            "year" => $year,
-            "title" => $title,
-            "unimarc_record" => "<pre>$unimarc</pre>"
+            "year" => $record->getYear(),
+            "title" => $record->getTitle(),
+            "unimarc_record" => "<pre>" . $record->getMarcBefore() . "</pre>"
         ]);
     }
 

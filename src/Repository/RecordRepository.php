@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\BatchImport;
+use App\Entity\Iln;
 use App\Entity\LinkError;
 use App\Entity\Rcr;
 use App\Entity\Record;
@@ -121,13 +122,24 @@ class RecordRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function deleteForBatch(BatchImport $batchImport) {
+    public function deleteForBatch(BatchImport $batchImport)
+    {
         $this->createQueryBuilder('l')
             ->delete()
             ->where('l.batchImport = :batchImport')
             ->setParameter('batchImport', $batchImport)
             ->getQuery()
             ->execute();
+    }
+
+    public function findMissingMarcForIln(Iln $iln)
+    {
+        return $this->createQueryBuilder('l')
+            ->join("l.rcrCreate", "r")
+            ->where("r.iln = :iln and l.marcBefore is null and l.status = 0")
+            ->setParameter('iln', $iln)
+            ->getQuery()
+            ->getResult();
     }
 
     // /**
