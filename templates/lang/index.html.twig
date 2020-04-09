@@ -1,0 +1,23 @@
+{% extends "base.html.twig" %}
+{% block header %}
+{% endblock %}
+
+{% block body %}
+    {{ include("_breadcrumb.html.twig", {'page': 'iln_lang'}) }}
+    <table class="table">
+        <tr>
+            <th>Code langue</th>
+            <th>Nom</th>
+            <th>Notices disponibles</th>
+        </tr>
+        {% for lang in langs %}
+            <tr>
+                <td>{{ lang.code }}</td>
+                <td>{{ lang.langlabel }}</td>
+                <td><a target="_blank"
+                       href="{{ url("view_record_lang", {ilnCode: iln.code, ilnSecret: iln.secret, langCode: lang.code}) }}">{{ lang.nb }}</a>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

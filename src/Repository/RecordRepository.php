@@ -23,6 +23,7 @@ class RecordRepository extends ServiceEntityRepository
         parent::__construct($registry, Record::class);
     }
 
+
     public function findOneRandomNoWinnie(Rcr $rcr) {
         $countResults = $this->createQueryBuilder('l')
             ->select("COUNT(l)")
@@ -47,7 +48,38 @@ class RecordRepository extends ServiceEntityRepository
         return $result[0];
     }
 
-    public function findOneRandom(Rcr $rcr) {
+    public function findOneRandomLangNoWinnie(Iln $iln, $lang)
+    {
+        $countResults = $this->createQueryBuilder('l')
+            ->select("COUNT(l)")
+            ->join('l.rcrCreate', 'rcr')
+            ->where("l.lang = :lang and l.winnie = 0 and l.locked is null and l.status = 0 and rcr.iln = :iln")
+            ->setParameter('iln', $iln)
+            ->setParameter('lang', $lang)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $offset = rand(0, $countResults);
+
+        $result = $this->createQueryBuilder('l')
+            ->join('l.rcrCreate', 'rcr')
+            ->where("l.lang = :lang and l.winnie = 0 and l.locked is null and l.status = 0 and rcr.iln = :iln")
+            ->setParameter('iln', $iln)
+            ->setParameter('lang', $lang)
+            ->getQuery()
+            ->setFirstResult($offset)
+            ->setMaxResults(1)
+            ->getResult();
+
+        if (sizeof($result) == 0) {
+            return null;
+        }
+        return $result[0];
+    }
+
+
+    public function findOneRandom(Rcr $rcr)
+    {
         $countResults = $this->createQueryBuilder('l')
             ->select("COUNT(l)")
             ->where("l.locked is null and l.status = 0 and l.rcrCreate = :rcr")
@@ -70,12 +102,44 @@ class RecordRepository extends ServiceEntityRepository
         return $result[0];
     }
 
-    public function unlockRecords() {
+    public function findOneRandomLang(Iln $iln, $lang)
+    {
+        $countResults = $this->createQueryBuilder('l')
+            ->select("COUNT(l)")
+            ->join('l.rcrCreate', 'rcr')
+            ->where("l.lang = :lang and l.locked is null and l.status = 0 and rcr.iln = :iln")
+            ->setParameter('iln', $iln)
+            ->setParameter('lang', $lang)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $offset = rand(0, $countResults);
+
+        $result = $this->createQueryBuilder('l')
+            ->join('l.rcrCreate', 'rcr')
+            ->where("l.lang = :lang and l.locked is null and l.status = 0 and rcr.iln = :iln")
+            ->setParameter('iln', $iln)
+            ->setParameter('lang', $lang)
+            ->getQuery()
+            ->setFirstResult($offset)
+            ->setMaxResults(1)
+            ->getResult();
+
+        if (sizeof($result) == 0) {
+            return null;
+        }
+        return $result[0];
+    }
+
+
+    public function unlockRecords()
+    {
         $em = $this->getEntityManager();
         $em->getConnection()->exec("UPDATE `record` set locked = null where locked is not null AND TIMEDIFF(now(), locked) > \"01:00:00\"");
     }
 
-    public function forceUnlockRecordsForRcr(Rcr $rcr) {
+    public function forceUnlockRecordsForRcr(Rcr $rcr)
+    {
         return $this->createQueryBuilder('l')
             ->update()
             ->set('l.locked', 'null')
@@ -142,6 +206,17 @@ class RecordRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function getLangsForIln(Iln $iln)
+    {
+        return $this->createQueryBuilder('rec')
+            ->select("rec.lang as code, count(rec) as nb")
+            ->join("rec.rcrCreate", "rcr")
+            ->where("rec.status = 0 and rcr.iln = :iln and rec.lang is not null")
+            ->setParameter('iln', $iln)
+            ->groupBy("rec.lang")
+            ->getQuery()
+            ->getResult();
+    }
     // /**
     //  * @return Record[] Returns an array of Record objects
     //  */

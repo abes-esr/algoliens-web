@@ -111,6 +111,11 @@ class Record
      */
     private $skipReason;
 
+    /**
+     * @ORM\Column(type="string", length=6, nullable=true)
+     */
+    private $lang;
+
     public function __construct()
     {
         $this->linkErrors = new ArrayCollection();
@@ -346,5 +351,33 @@ class Record
         $this->skipReason = $skipReason;
 
         return $this;
+    }
+
+    public function getLang(): ?string
+    {
+        return $this->lang;
+    }
+
+    public function setLang(?string $lang): self
+    {
+        $this->lang = $lang;
+
+        return $this;
+    }
+
+    public function guessLang()
+    {
+        if ($this->getMarcBefore() == "Notice absente du sudoc public") {
+            return "zzz";
+        }
+        $lines = preg_split("/\n/", $this->getMarcBefore());
+        foreach ($lines as $line) {
+            if (preg_match("/^101/", $line)) {
+                $lang = preg_replace('/^.*\\$a ([^ ]*) .*$/', "$1", $line);
+                if (strlen($lang) == 3) {
+                    return $lang;
+                }
+            }
+        }
     }
 }
