@@ -166,6 +166,11 @@ class Iln
         return $this;
     }
 
+    public function getDefaultSkipReason()
+    {
+        return $this->skipReasons[0];
+    }
+
     /**
      * @return Collection|SkipReason[]
      */

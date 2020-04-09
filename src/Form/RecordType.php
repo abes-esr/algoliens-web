@@ -58,7 +58,9 @@ class RecordType extends AbstractType
                 'class' => SkipReason::class,
                 'label' => "Raison du non traitement : ",
                 'choices' => $record->getRcrCreate()->getIln()->getSkipReasons(),
-                'expanded' => true
+                'expanded' => true,
+                'data' => $record->getRcrCreate()->getIln()->getDefaultSkipReason()
+
             ]);
         }
 
