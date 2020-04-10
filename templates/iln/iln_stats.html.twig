@@ -1,16 +1,17 @@
-{% extends "base.html.twig" %}
+{% extends "includes/base.html.twig" %}
 {% block header %}
 {% endblock %}
 
 {% block body %}
-    {{ include("_breadcrumb.html.twig", {'page': 'stat'}) }}
+    {{ include("includes/_breadcrumb.html.twig", {'page': 'stat'}) }}
 
     {% if iln.skipReasons | length > 0 %}
-        <h1>Reprises à venir</h1>
+        <h1>Reprises à venir (<a href="{{ url("view_iln_reprises", {code: iln.code, secret: iln.secret}) }}">voir le
+                détail</a>)</h1>
         <ul>
-        {% for skipReason in iln.skipReasons %}
-            <li>{{ skipReason.description }} : {{ skipReason.records|length }}</li>
-        {% endfor %}
+            {% for skipReason in iln.skipReasons %}
+                <li>{{ skipReason.description }} : {{ skipReason.records|length }}</li>
+            {% endfor %}
         </ul>
     {% endif %}
 

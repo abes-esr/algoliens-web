@@ -1,0 +1,47 @@
+{% extends "includes/base.html.twig" %}
+{% block header %}
+{% endblock %}
+
+{% block body %}
+    {{ include("includes/_breadcrumb.html.twig", {'page': 'iln'}) }}
+    <div class="alert alert-secondary">
+        <p>En choisissant un RCR ci-dessous, une notice créée par ce RCR et qui a un problème de lien vous sera
+            proposée.</p>
+        <p> Vous pouvez alors :</p>
+        <ul>
+            <li>faire les corrections nécessaires via Winibw ou Paprika → cette notice ne sera plus proposée</li>
+            <li>passer votre tour → cette notice pourra être proposée à nouveau à l'avenir</li>
+        </ul>
+        <p>
+            {{ iln.getNumberOfRecordsHandled }} notices traitées jusqu'ici pour cet ILN (<a
+                    href="{{ url("view_iln_stats", {'code': iln.code, 'secret': iln.secret}) }}">détail</a>).
+        </p>
+    </div>
+    <h1>Accès par langue</h1>
+    <p>Voir la <a href="{{ url("view_iln_langs", {code: iln.code, secret: iln.secret}) }}">page dédiée</a>.</p>
+    <h1>Accès par RCR</h1>
+    <table class="table">
+        <tr>
+            <th>RCR</th>
+            <th>Libellé</th>
+            <th>Reste à traiter</th>
+            <th>À reprendre document en main</th>
+        </tr>
+        {% for rcr in iln.getRcrsWithRecords() %}
+            <tr>
+                <td>{{ rcr.code }}</td>
+                <td>{{ rcr.label }}</td>
+                <td>
+                    <strong><a href="{{ url('view_record_rcr', {ilnCode: iln.code, rcrCode: rcr.code, ilnSecret: iln.secret}) }}">{{ rcr.numberOfRecordsAvailable }}</a></strong>
+                </td>
+                <td>
+                    {% if rcr.numberOfRecordsReprise != 0 %}
+                    <a href="{{ url("view_rcr_reprise", {ilnCode: iln.code, rcrCode: rcr.code}) }}">{{ rcr.numberOfRecordsReprise }}</a>
+                </td>
+                {% else %}
+                    -
+                {% endif %}
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

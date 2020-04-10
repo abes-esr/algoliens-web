@@ -1,0 +1,32 @@
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url('home') }}">Accueil</a></li>
+        <li class="breadcrumb-item"><a
+                    href="{{ url('view_iln', {'code': iln.code, 'secret': iln.secret}) }}">{{ iln.label }}</a></li>
+        {% if rcr is defined %}
+            <li class="breadcrumb-item"><a
+                        href="{{ url('view_record_rcr', {'ilnCode': iln.code, 'rcrCode': rcr.code, 'ilnSecret': iln.secret}) }}">{{ rcr.label }}</a>
+            </li>
+        {% elseif langCode is defined %}
+            <li class="breadcrumb-item"><a
+                        href="{{ url('view_record_lang', {'ilnCode': iln.code, 'ilnSecret': iln.secret, 'lang': langCode}) }}">{{ langLabel }}</a>
+            </li>
+        {% endif %}
+
+        {% if page == "record" or page == "record_lang" %}
+            {% if record is not null %}
+                <li class="breadcrumb-item active" aria-current="page">Notice n°{{ record.ppn }}</li>
+            {% endif %}
+        {% elseif page == "stat" %}
+            <li class="breadcrumb-item active" aria-current="page">Statistiques</li>
+        {% elseif page == "reprise" %}
+            <li class="breadcrumb-item active" aria-current="page">Notices à reprendre document en main</li>
+        {% elseif page == "iln" %}
+            <li class="breadcrumb-item active" aria-current="page">Sélection d'un RCR</li>
+        {% elseif page == "iln_langs" %}
+            <li class="breadcrumb-item active" aria-current="page">Accès par langue</li>
+        {% elseif page == "iln_reprises" %}
+            <li class="breadcrumb-item active" aria-current="page">Notices à reprendre</li>
+        {% endif %}
+    </ol>
+</nav>

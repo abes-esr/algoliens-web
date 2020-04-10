@@ -1,9 +1,9 @@
-{% extends "base.html.twig" %}
+{% extends "includes/base.html.twig" %}
 {% block header %}
 {% endblock %}
 
 {% block body %}
-    {{ include("_breadcrumb.html.twig", {'page': 'iln_lang'}) }}
+    {{ include("includes/_breadcrumb.html.twig", {'page': 'iln_langs'}) }}
     <table class="table">
         <tr>
             <th>Code langue</th>
@@ -14,8 +14,8 @@
             <tr>
                 <td>{{ lang.code }}</td>
                 <td>{{ lang.langlabel }}</td>
-                <td><a target="_blank"
-                       href="{{ url("view_record_lang", {ilnCode: iln.code, ilnSecret: iln.secret, langCode: lang.code}) }}">{{ lang.nb }}</a>
+                <td>
+                    <a href="{{ url("view_record_lang", {ilnCode: iln.code, ilnSecret: iln.secret, lang: lang.code}) }}">{{ lang.nb }}</a>
                 </td>
             </tr>
         {% endfor %}

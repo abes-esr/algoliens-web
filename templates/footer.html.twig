@@ -1,7 +1,0 @@
-{% if iln is defined %}
-<div class="row">
-    <footer class="col-12">
-        Notices disponibles pour l'ILN : {{ iln.getNumberOfRecords }} / Notices corrigées :{{ iln.getNumberOfRecordsCorrected }} (<a href="{{ url('view_iln_stats', {'code': iln.code}) }}">voir le détail</a>)
-    </footer>
-</div>
-{% endif %}

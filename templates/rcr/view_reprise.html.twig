@@ -1,0 +1,31 @@
+{% extends "includes/base.html.twig" %}
+{% block header %}
+{% endblock %}
+
+{% block body %}
+    {{ include("includes/_breadcrumb.html.twig", {'page': 'reprise'}) }}
+    {% for id, skipGroup in recordsByReason %}
+        {% if skipGroup['skipReason'] is not null %}
+            <h1>{{ skipGroup['skipReason'] }}</h1>
+        {% else %}
+            <h1>Raison non précisée</h1>
+        {% endif %}
+
+        <table class="table">
+            <tr>
+                <th>PPN</th>
+                <th>Titre</th>
+                <th>Année</th>
+                <th>Note</th>
+            </tr>
+            {% for record in skipGroup.records %}
+                <tr>
+                    <td>{{ record.ppn }}</td>
+                    <td>{{ record.title }}</td>
+                    <td>{{ record.year }}</td>
+                    <td>{{ record.comment }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% endfor %}
+{% endblock %}

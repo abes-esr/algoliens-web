@@ -23,114 +23,48 @@ class RecordRepository extends ServiceEntityRepository
         parent::__construct($registry, Record::class);
     }
 
-
-    public function findOneRandomNoWinnie(Rcr $rcr) {
-        $countResults = $this->createQueryBuilder('l')
-            ->select("COUNT(l)")
-            ->where("l.winnie = 0 and l.locked is null and l.status = 0 and l.rcrCreate = :rcr")
-            ->setParameter('rcr', $rcr)
-            ->getQuery()
-            ->getSingleScalarResult();
-
-        $offset = rand(0, $countResults);
-
-        $result = $this->createQueryBuilder('l')
-            ->where("l.winnie = 0 and l.locked is null and l.status = 0 and l.rcrCreate = :rcr")
-            ->setParameter('rcr', $rcr)
-            ->getQuery()
-            ->setFirstResult($offset)
-            ->setMaxResults(1)
-            ->getResult();
-
-        if (sizeof($result) == 0) {
-            return null;
-        }
-        return $result[0];
-    }
-
-    public function findOneRandomLangNoWinnie(Iln $iln, $lang)
+    public function getOneRandom(bool $winnie, Rcr $rcr = null, Iln $iln = null, string $lang = null, $unlocked = false)
     {
-        $countResults = $this->createQueryBuilder('l')
-            ->select("COUNT(l)")
-            ->join('l.rcrCreate', 'rcr')
-            ->where("l.lang = :lang and l.winnie = 0 and l.locked is null and l.status = 0 and rcr.iln = :iln")
-            ->setParameter('iln', $iln)
-            ->setParameter('lang', $lang)
-            ->getQuery()
-            ->getSingleScalarResult();
+        if (is_null($rcr) && is_null($lang)) {
+            print "Impossible de récupérer une notice (manque paramètre langue ou RCR)";
+            exit;
+        }
+
+        # On commence par compter le nombre de résultats qui matchent notre demande
+        $qb = $this->createQueryBuilder('l');
+
+        $qb = $qb->where("l.locked is null and l.status = 0");
+        if ($winnie === false) {
+            $qb = $qb->andWhere("l.winnie = 0");
+        }
+
+        if (!is_null($rcr)) {
+            $qb = $qb->andWhere("l.rcrCreate = :rcr");
+            $qb = $qb->setParameter('rcr', $rcr);
+        }
+
+        if (!is_null($lang)) {
+            $qb = $qb->andWhere("l.lang = :lang");
+            $qb = $qb->setParameter('lang', $lang);
+        }
+
+        $countResults = $qb->select("COUNT(l)")->getQuery()->getSingleScalarResult();
+        if (($countResults == 0) && ($unlocked === false)) {
+            // On va essayer de débloquer les notices
+            $this->unlockRecords();
+            return $this->getOneRandom($winnie, $rcr, $iln, $lang, true);
+        }
 
         $offset = rand(0, $countResults);
 
-        $result = $this->createQueryBuilder('l')
-            ->join('l.rcrCreate', 'rcr')
-            ->where("l.lang = :lang and l.winnie = 0 and l.locked is null and l.status = 0 and rcr.iln = :iln")
-            ->setParameter('iln', $iln)
-            ->setParameter('lang', $lang)
+        $result = $qb->select("l")
             ->getQuery()
             ->setFirstResult($offset)
             ->setMaxResults(1)
-            ->getResult();
+            ->getOneOrNullResult();
 
-        if (sizeof($result) == 0) {
-            return null;
-        }
-        return $result[0];
+        return $result;
     }
-
-
-    public function findOneRandom(Rcr $rcr)
-    {
-        $countResults = $this->createQueryBuilder('l')
-            ->select("COUNT(l)")
-            ->where("l.locked is null and l.status = 0 and l.rcrCreate = :rcr")
-            ->setParameter('rcr', $rcr)
-            ->getQuery()
-            ->getSingleScalarResult();
-        $offset = rand(0, $countResults);
-
-        $result = $this->createQueryBuilder('l')
-            ->where("l.locked is null and l.status = 0 and l.rcrCreate = :rcr")
-            ->setParameter('rcr', $rcr)
-            ->getQuery()
-            ->setFirstResult($offset)
-            ->setMaxResults(1)
-            ->getResult();
-
-        if (sizeof($result) == 0) {
-            return null;
-        }
-        return $result[0];
-    }
-
-    public function findOneRandomLang(Iln $iln, $lang)
-    {
-        $countResults = $this->createQueryBuilder('l')
-            ->select("COUNT(l)")
-            ->join('l.rcrCreate', 'rcr')
-            ->where("l.lang = :lang and l.locked is null and l.status = 0 and rcr.iln = :iln")
-            ->setParameter('iln', $iln)
-            ->setParameter('lang', $lang)
-            ->getQuery()
-            ->getSingleScalarResult();
-
-        $offset = rand(0, $countResults);
-
-        $result = $this->createQueryBuilder('l')
-            ->join('l.rcrCreate', 'rcr')
-            ->where("l.lang = :lang and l.locked is null and l.status = 0 and rcr.iln = :iln")
-            ->setParameter('iln', $iln)
-            ->setParameter('lang', $lang)
-            ->getQuery()
-            ->setFirstResult($offset)
-            ->setMaxResults(1)
-            ->getResult();
-
-        if (sizeof($result) == 0) {
-            return null;
-        }
-        return $result[0];
-    }
-
 
     public function unlockRecords()
     {
@@ -149,7 +83,8 @@ class RecordRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
-    public function getLockedRecords(Rcr $rcr) {
+    public function getLockedRecordsForRcr(Rcr $rcr)
+    {
         $result = $this->createQueryBuilder('l')
             ->where("l.rcrCreate = :rcr and l.status=0 and l.locked != ''")
             ->setParameter('rcr', $rcr)
@@ -217,32 +152,4 @@ class RecordRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
-    // /**
-    //  * @return Record[] Returns an array of Record objects
-    //  */
-    /*
-    public function findByExampleField($value)
-    {
-        return $this->createQueryBuilder('r')
-            ->andWhere('r.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('r.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
-
-    /*
-    public function findOneBySomeField($value): ?Record
-    {
-        return $this->createQueryBuilder('r')
-            ->andWhere('r.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
-    }
-    */
 }

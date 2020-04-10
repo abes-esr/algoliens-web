@@ -53,23 +53,33 @@ class RecordType extends AbstractType
                     'required' => false
                 ]
             );
-        if (sizeof($record->getRcrCreate()->getIln()->getSkipReasons()) > 0) {
-            $builder->add('skipReason', EntityType::class, [
-                'class' => SkipReason::class,
-                'label' => "Raison du non traitement : ",
-                'choices' => $record->getRcrCreate()->getIln()->getSkipReasons(),
-                'expanded' => true,
-                'data' => $record->getRcrCreate()->getIln()->getDefaultSkipReason()
 
-            ]);
+        $skip_reasons = $options["skip_reasons"];
+        if (sizeof($skip_reasons) == 0) {
+            $skip_reasons = $record->getRcrCreate()->getIln()->getSkipReasons();
         }
+
+        $skip_reason_default = $options["skip_reason_default"];
+        if (is_null($skip_reason_default)) {
+            $skip_reason_default = $record->getRcrCreate()->getIln()->getDefaultSkipReason();
+        }
+
+        $builder->add('skipReason', EntityType::class, [
+            'class' => SkipReason::class,
+            'label' => "Raison du non traitement : ",
+            'choices' => $skip_reasons,
+            'expanded' => true,
+            'data' => $skip_reason_default
+        ]);
 
     }
 
     public function configureOptions(OptionsResolver $resolver)
     {
-        /*$resolver->setDefaults([
+        $resolver->setDefaults([
             'data_class' => Record::class,
-        ]);*/
+            'skip_reasons' => [],
+            'skip_reason_default' => null
+        ]);
     }
 }

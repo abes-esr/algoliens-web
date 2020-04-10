@@ -18,7 +18,7 @@
                 {% elseif rcr is defined %}
                     {% set ilnHeader = rcr.iln %}
                 {% endif %}
-                {% include "header_settings.html.twig" with {iln: ilnHeader} %}
+                {% include "includes/header_settings.html.twig" with {iln: ilnHeader} %}
             </nav>
         </div>
             {% block header %}
@@ -31,7 +31,6 @@
             {% endfor %}
 
             {% block body %}{% endblock %}
-            <!-- {% include 'footer.html.twig' %} -->
         </div>
         {% block javascripts %}
             <!-- Renders app.js & a webpack runtime.js file
