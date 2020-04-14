@@ -2,12 +2,20 @@
 
 Ce repository comprend les sources d'une application web dont le but est de proposer à l'usager des notices issues des résultats du web service de l'Abes Algoliens.
 
+Le développement propose une interface web qui va aller chercher dans une base de données des notices "à corriger" puis enregistrer l'action faite par l'utilisateur sur la notice proposée.
+
+L'outil est développé en PHP sur la base du framework Symfony dans sa version 5.
+
+# Capture d'écran
+
+![Visualistion d'une notice](doc/screenshot.png)
+
 # Installation
 
 Afin d'installer une copie de cet outil, la procédure à suivre est la suivante :
 
 ## Pré-requis
-* PHP
+* PHP 7.2 (fonctionne peut-être sur des versions plus anciennes mais testé sur 7.2)
 * Mysql
 * composer ( https://getcomposer.org/download/ )
 * Yarn ( https://yarnpkg.com/ )
