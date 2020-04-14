@@ -31,7 +31,7 @@ class RcrController extends AbstractController
 
 
     /**
-     * @Route("/iln/{ilnCode}/rcr/{rcrCode}/reprise", name="view_rcr_reprise")
+     * @Route("//chantier/{ilnCode}-{ilnSecret}/rcr/{rcrCode}/reprise", name="view_rcr_reprise")
      * @Entity("iln", expr="repository.findOneBy({'code': ilnCode})")
      * @Entity("rcr", expr="repository.findOneBy({'code': rcrCode})")
      */
@@ -51,6 +51,6 @@ class RcrController extends AbstractController
                 $recordsByReason[$record->getSkipReason()->getId()]["records"][] = $record;
             }
         }
-        return $this->render("rcr/view_reprise.html.twig", ["iln" => $iln, "recordsByReason" => $recordsByReason]);
+        return $this->render("rcr/view_reprise.html.twig", ["iln" => $iln, "rcr" => $rcr, "recordsByReason" => $recordsByReason]);
     }
 }
