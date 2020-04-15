@@ -23,6 +23,8 @@
             <th>Créateur</th>
             <th>Unica</th>
         </tr>
+        {% set batchCreaSum = 0 %}
+        {% set batchUnicaSum = 0 %}
         {% for rcr in iln.rcrs %}
             <tr>
                 <td>{{ rcr.code }}</td>
@@ -32,16 +34,18 @@
                 {% set batchUnica =  rcr.hasBatchRun(constant('App\\Entity\\BatchImport::TYPE_UNICA')) %}
                 <td>
                     {% if not batchCrea %}
-                        <span class="badge badge-danger">&#10006;</span>
+                        <span class="badge badge-danger">&#10006; </span>
                     {% else %}
-                        <span class="badge badge-success">&#x2714;</span>
+                        {% set batchCreaSum = batchCreaSum + batchCrea.countRecords %}
+                        <span class="badge badge-success">&#x2714; ({{ batchCrea.countRecords }})</span>
                     {% endif %}
                 </td>
                 <td>
                     {% if not batchUnica %}
                         <span class="badge badge-danger">&#10006;</span>
                     {% else %}
-                        <span class="badge badge-success">&#x2714;</span>
+                        {% set batchUnicaSum = batchUnicaSum + batchUnica.countRecords %}
+                        <span class="badge badge-success">&#x2714; ({{ batchUnica.countRecords }})</span>
                     {% endif %}
                 </td>
                 <td>
@@ -49,6 +53,12 @@
                 </td>
             </tr>
         {% endfor %}
+        <tr>
+            <th colspan="2" class="text-right">Total</th>
+            <th>{{ batchCreaSum + batchUnicaSum }}</th>
+            <th>{{ batchCreaSum }}</th>
+            <th>{{ batchUnicaSum }}</th>
+        </tr>
     </table>
 
         {% endif %}
