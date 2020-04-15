@@ -64,14 +64,15 @@ class RecordType extends AbstractType
             $skip_reason_default = $record->getRcrCreate()->getIln()->getDefaultSkipReason();
         }
 
-        $builder->add('skipReason', EntityType::class, [
-            'class' => SkipReason::class,
-            'label' => "Raison du non traitement : ",
-            'choices' => $skip_reasons,
-            'expanded' => true,
-            'data' => $skip_reason_default
-        ]);
-
+        if (sizeof($skip_reasons) > 0) {
+            $builder->add('skipReason', EntityType::class, [
+                'class' => SkipReason::class,
+                'label' => "Raison du non traitement : ",
+                'choices' => $skip_reasons,
+                'expanded' => true,
+                'data' => $skip_reason_default
+            ]);
+        }
     }
 
     public function configureOptions(OptionsResolver $resolver)

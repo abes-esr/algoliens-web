@@ -4,22 +4,29 @@
 
 {% block body %}
     {{ include("includes/_breadcrumb.html.twig", {'page': 'reprise'}) }}
-    <p>Accès direct :
-    <ul>
-        {% for id, skipGroup in recordsByReason %}
-            {% if skipGroup.skipReason != "" %}
-                <li><a href="#reason{{ id }}">{{ skipGroup.skipReason }}</a> ({{ skipGroup["records"]|length }})</li>
-            {% endif %}
-        {% endfor %}
-    </ul>
-    </p>
+    {% if iln.skipReasons|length > 0 %}
+        <p>Accès direct :
+        <ul>
+            {% for id, skipGroup in recordsByReason %}
+                {% if skipGroup.skipReason != "" %}
+                    <li><a href="#reason{{ id }}">{{ skipGroup.skipReason }}</a> ({{ skipGroup["records"]|length }})
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+        </p>
+    {% endif %}
     {% for id, skipGroup in recordsByReason %}
         {% if (id != 0) or (skipGroup["records"]|length != 0) %}
             <a id="reason{{ id }}"/>
             {% if skipGroup['skipReason'] is not null %}
                 <h1>{{ skipGroup['skipReason'] }}</h1>
             {% else %}
-                <h1>Raison non précisée</h1>
+                {% if iln.skipReasons | length > 0 %}
+                    <h1>Raison non précisée</h1>
+                {% else %}
+                    <h1>Notices à reprendre document en main</h1>
+                {% endif %}
             {% endif %}
 
             {% if skipGroup["records"]|length == 0 %}
