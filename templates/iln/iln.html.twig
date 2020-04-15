@@ -17,8 +17,10 @@
                     href="{{ url("view_iln_stats", {'code': iln.code, 'secret': iln.secret}) }}">détail</a>).
         </p>
     </div>
-    <h1>Accès par langue</h1>
-    <p>Voir la <a href="{{ url("view_iln_langs", {code: iln.code, secret: iln.secret}) }}">page dédiée</a>.</p>
+    {% if iln.hasLanguages %}
+        <h1>Accès par langue</h1>
+        <p>Voir la <a href="{{ url("view_iln_langs", {code: iln.code, secret: iln.secret}) }}">page dédiée</a>.</p>
+    {% endif %}
     <h1>Accès par RCR</h1>
     <table class="table">
         <tr>

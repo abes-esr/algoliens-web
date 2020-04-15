@@ -48,6 +48,11 @@ class Iln
      */
     private $skipReasons;
 
+    /**
+     * @ORM\Column(type="boolean", options={"default": false})
+     */
+    private $hasLanguages;
+
     public function __construct()
     {
         $this->rcrs = new ArrayCollection();
@@ -198,6 +203,18 @@ class Iln
                 $skipReason->setIln(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getHasLanguages(): ?bool
+    {
+        return $this->hasLanguages;
+    }
+
+    public function setHasLanguages(bool $hasLanguages): self
+    {
+        $this->hasLanguages = $hasLanguages;
 
         return $this;
     }
