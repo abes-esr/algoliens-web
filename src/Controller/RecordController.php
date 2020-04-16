@@ -22,22 +22,6 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class RecordController extends AbstractController
 {
-    /*
-        private function getOneRecordFromDatabase(Request $request, Rcr $rcr, ?string $ppn)
-        {
-            $session = $request->getSession()->get("winnie");
-            if (is_null($ppn)) {
-                if ($session->get("winnie")) {
-                    $record = $this->getDoctrine()->getRepository(Record::class)->findOneRandom($rcr);
-                } else {
-                    $record = $this->getDoctrine()->getRepository(Record::class)->findOneRandomNoWinnie($rcr);
-                }
-            } else {
-                $record = $this->getDoctrine()->getRepository(Record::class)->findOneBy(["ppn" => $ppn]);
-            }
-            return $record;
-        }
-    */
     private function getOneRecord(Request $request)
     {
         $route = $request->attributes->get("_route");
@@ -48,7 +32,7 @@ class RecordController extends AbstractController
         $rcr = null;
         if ($route == "view_record_lang") {
             $lang = $request->attributes->get("lang");
-        } elseif ($route == "view_record_rcr") {
+        } elseif (($route == "view_record_rcr") || ($route == "view_record_permalink")) {
             $rcr = $request->attributes->get("rcr");
         } else {
             dd($request);
@@ -168,13 +152,44 @@ class RecordController extends AbstractController
     }
 
     /**
-     * @Route("/chantier/{ilnCode}-{ilnSecret}/rcr/{rcrCode}/{ppn?}", name="view_record_rcr")
+     * @Route("/chantier/{ilnCode}-{ilnSecret}/rcr/{rcrCode}", name="view_record_rcr")
      * @Entity("iln", expr="repository.findOneBy({'code': ilnCode})")
      * @Entity("rcr", expr="repository.findOneBy({'code': rcrCode})")
      */
-    public function viewForRcr(Iln $iln, Rcr $rcr, ?string $ppn, EntityManagerInterface $em, Request $request)
+    public function viewForRcr(Iln $iln, Rcr $rcr, EntityManagerInterface $em, Request $request)
     {
         $record = $this->getOneRecord($request);
+        $redirectResponse = $this->redirect($this->generateUrl("view_record_rcr", ['ilnCode' => $iln->getCode(), 'ilnSecret' => $iln->getSecret(), 'rcrCode' => $rcr->getCode()]));
+
+        $responseTemplate = "record/record_for_rcr.html.twig";
+        $responseParams = [
+            "iln" => $iln,
+            "record" => $record,
+            "rcr" => $rcr
+        ];
+
+
+        if (is_null($record)) {
+            $responseParams["lockedRecords"] = $this->getDoctrine()->getRepository(Record::class)->getLockedRecordsForRcr($rcr);
+            return $this->render($responseTemplate,
+                $responseParams
+            );
+        } else {
+
+        }
+
+        return $this->viewRecord($record, $iln, $em, $request, $redirectResponse, $responseTemplate, $responseParams);
+    }
+
+
+    /**
+     * @Route("/chantier/{ilnCode}-{ilnSecret}/rcr/{rcrCode}/{ppn}-{idRecord}", name="view_record_permalink")
+     * @Entity("iln", expr="repository.findOneBy({'code': ilnCode})")
+     * @Entity("rcr", expr="repository.findOneBy({'code': rcrCode})")
+     * @Entity("record", expr="repository.find(idRecord)")
+     */
+    public function viewPermalink(Iln $iln, Rcr $rcr, Record $record, EntityManagerInterface $em, Request $request)
+    {
         $redirectResponse = $this->redirect($this->generateUrl("view_record_rcr", ['ilnCode' => $iln->getCode(), 'ilnSecret' => $iln->getSecret(), 'rcrCode' => $rcr->getCode()]));
 
         $responseTemplate = "record/record_for_rcr.html.twig";
