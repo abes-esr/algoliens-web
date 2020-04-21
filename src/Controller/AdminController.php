@@ -124,14 +124,23 @@ class AdminController extends AbstractController
      * @Entity("iln", expr="repository.findOneBy({'code': ilnCode})")
      */
     public function ilnPopulateWithRcr(Iln $iln, EntityManagerInterface $em, Request $request) {
-        $rcrJson = file_get_contents("https://www.idref.fr/services/iln2rcr/".$iln->getNumber()."&format=text/json");
+        $urlWs = "https://www.idref.fr/services/iln2rcr/" . $iln->getNumber() . "&format=text/json";
+        $rcrJson = file_get_contents($urlWs);
         $rcrArray = json_decode($rcrJson);
 
         $count = 0;
         foreach ($rcrArray->sudoc->query->result as $rcrDescription) {
             $rcr = new Rcr();
-            $rcr->setCode($rcrDescription->library->rcr);
-            $rcr->setLabel($rcrDescription->library->shortname);
+            $library = null;
+            if (!isset($rcrDescription->library)) {
+                // Dans le cas d'un RCR unique pour un ILN, on n'a plus la même structure
+                // Exemple pour l'ILN 129
+                $library = $rcrDescription;
+            } else {
+                $library = $rcrDescription->library;
+            }
+            $rcr->setCode($library->rcr);
+            $rcr->setLabel($library->shortname);
             $rcr->setUpdated(new \DateTime());
             $rcr->setIln($iln);
             $rcr->setHarvested(0);
