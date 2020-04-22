@@ -55,7 +55,7 @@ class RecordRepository extends ServiceEntityRepository
             return $this->getOneRandom($winnie, $rcr, $iln, $lang, true);
         }
 
-        $offset = rand(0, $countResults);
+        $offset = rand(0, $countResults - 1);
 
         $result = $qb->select("l")
             ->getQuery()
