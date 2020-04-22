@@ -49,10 +49,15 @@ class RecordRepository extends ServiceEntityRepository
         }
 
         $countResults = $qb->select("COUNT(l)")->getQuery()->getSingleScalarResult();
-        if (($countResults == 0) && ($unlocked === false)) {
-            // On va essayer de débloquer les notices
-            $this->unlockRecords();
-            return $this->getOneRandom($winnie, $rcr, $iln, $lang, true);
+        if ($countResults == 0) {
+            if ($unlocked === false) {
+                // On va essayer de débloquer les notices
+                $this->unlockRecords();
+                return $this->getOneRandom($winnie, $rcr, $iln, $lang, true);
+            } else {
+                // On a déjà essayé de débloquer, rien n'y fait
+                return null;
+            }
         }
 
         $offset = rand(0, $countResults - 1);
@@ -93,7 +98,8 @@ class RecordRepository extends ServiceEntityRepository
         return $result;
     }
 
-    private function countByStatusForRcr(Rcr $rcr, int $status) {
+    private function countByStatusForRcr(Rcr $rcr, int $status)
+    {
         $countResults = $this->createQueryBuilder('l')
             ->select("COUNT(l)")
             ->where("l.status = :status and l.rcrCreate = :rcr")
@@ -104,15 +110,19 @@ class RecordRepository extends ServiceEntityRepository
 
         return $countResults;
     }
-    public function countCorrectedForRcr(Rcr $rcr) {
-        return $this->countByStatusForRcr($rcr, Record::RECORD_VALIDATED );
+
+    public function countCorrectedForRcr(Rcr $rcr)
+    {
+        return $this->countByStatusForRcr($rcr, Record::RECORD_VALIDATED);
     }
 
-    public function countRepriseForRcr(Rcr $rcr) {
+    public function countRepriseForRcr(Rcr $rcr)
+    {
         return $this->countByStatusForRcr($rcr, Record::RECORD_SKIPPED);
     }
 
-    public function findRepriseNeeded(Rcr $rcr) {
+    public function findRepriseNeeded(Rcr $rcr)
+    {
         return $this->createQueryBuilder('l')
             ->where("l.status = :status and l.rcrCreate = :rcr")
             ->setParameter('rcr', $rcr)
