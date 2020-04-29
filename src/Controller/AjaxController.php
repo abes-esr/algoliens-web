@@ -61,6 +61,7 @@ class AjaxController extends AbstractController
 
             $response .= "<p>Sont désormais localisés sur cette notice : <ul>$li</ul></p>";
         }
+        $response .= "<p>Si vous le souhaitez, vous pourrez trouver les coordonnées des correspondants catalogage de ces biblitohèques <a href='http://documentation.abes.fr/sudoc/Annuaire_Correspondants.htm'>sur le site de l'Abes</a>.</p>";
         $response .= "</div>";
         return new Response($response);
     }
