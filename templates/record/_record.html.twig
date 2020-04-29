@@ -10,6 +10,23 @@
                 <i>{{ record.comment }}</i>
             </div>
         {% endif %}
+
+        {% if record.status != constant("App\\Entity\\Record::RECORD_TODO") %}
+            <div class="alert alert-warning">
+                Cette notice a déjà le statut <strong>
+                    {% if record.status == constant("App\\Entity\\Record::RECORD_VALIDATED") %}
+                        corrigé
+                    {% elseif record.status == constant("App\\Entity\\Record::RECORD_SKIPPED") %}
+                        à reprendre document en main
+                        {% if record.skipReason is defined %}
+                            ({{ record.skipReason }})
+                        {% endif %}
+                    {% endif %}</strong>
+                <br/>
+                <i>{{ record.comment }}</i>
+            </div>
+        {% endif %}
+
         <p>Information sur le document : <span class="badge badge-info">{{ record.docTypeLabel }}</span>
             {% if record.batchImport %}<span
                     class="badge badge-primary">{{ record.batchImport.typeLabel }}</span>{% endif %}
@@ -79,7 +96,11 @@
         {% endif %}
         <p>Si vous ne souhaitez pas corriger cette notice maintenant mais souhaitez qu'elle soit à nouveau
             proposée plus tard dans le cadre de chantier, vous pouvez la laisser de côté pour le moment :
-            <br/><a href="{{ app.request.uri }}" class="btn btn-outline-primary">Voir une autre notice</a>
+            <br/><a href="{% if permalink is defined %}
+            {{ url("view_record_rcr", {'ilnCode': iln.code, 'ilnSecret': iln.secret, 'rcrCode': rcr.code}) }}
+{% else %}
+{{ app.request.uri }}
+{% endif %}" class="btn btn-outline-primary">Voir une autre notice</a>
         <p><small>Si vous pensez que cette notice pourra être traitée directement par un collègue, envoyez-lui ce lien
                 direct avant de passer à une autre notice (clic-droit > copier l'adresse du lien) : <a
                         href="{{ url("view_record_permalink", {ilnCode: iln.code, ilnSecret: iln.secret, rcrCode: rcr.code, idRecord: record.id, ppn: record.ppn}) }}">{{ url("view_record_permalink", {ilnCode: iln.code, ilnSecret: iln.secret, rcrCode: rcr.code, idRecord: record.id, ppn: record.ppn}) }}</a></small>

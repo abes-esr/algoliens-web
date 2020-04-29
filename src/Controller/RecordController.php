@@ -196,7 +196,8 @@ class RecordController extends AbstractController
         $responseParams = [
             "iln" => $iln,
             "record" => $record,
-            "rcr" => $rcr
+            "rcr" => $rcr,
+            "permalink" => true
         ];
 
 

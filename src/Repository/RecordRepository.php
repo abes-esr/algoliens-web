@@ -162,4 +162,14 @@ class RecordRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function findByPpnAndIln(string $ppn, Iln $iln) {
+        return $this->createQueryBuilder('rec')
+            ->join("rec.rcrCreate", "rcr")
+            ->where("rec.ppn = :ppn and rcr.iln = :iln")
+            ->setParameter("iln", $iln)
+            ->setParameter("ppn", $ppn)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

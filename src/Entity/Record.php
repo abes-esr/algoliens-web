@@ -14,6 +14,7 @@ use Doctrine\ORM\Mapping\Index;
  */
 class Record
 {
+    const RECORD_TODO = 0;
     const RECORD_VALIDATED = 1;
     const RECORD_SKIPPED = 2;
 

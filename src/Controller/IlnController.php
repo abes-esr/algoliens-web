@@ -10,6 +10,8 @@ use App\Repository\RecordRepository;
 use App\Service\AbesLanguages;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -72,5 +74,49 @@ class IlnController extends AbstractController
     {
         $skipReasons = $iln->getSkipReasons();
         return $this->render("iln/reprises.html.twig", ["iln" => $iln, "skipReaons" => $skipReasons]);
+    }
+
+    /**
+     * @Route("/chantier/{code}-{secret}/cherche-ppn", name="search_ppn")
+     */
+    public function searchPpn(Iln $iln, Request $request, RecordRepository $recordRepository)
+    {
+        $form = $this->createFormBuilder(null)
+            ->add("ppn", TextType::class)
+            ->add("submit", SubmitType::class, [
+                "label" => "Rechercher"
+            ])
+            ->setAction($this->generateUrl("search_ppn", ["code" => $iln->getCode(), "secret" => $iln->getSecret()]))
+            ->getForm();
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $data = $form->getData();
+            $ppn = $data["ppn"];
+
+            $record = $recordRepository->findByPpnAndIln($ppn, $iln);
+            if (!is_null($record)) {
+                return $this->redirect(
+                    $this->generateUrl(
+                        "view_record_permalink",
+                        [
+                            "ilnCode" => $record->getRcrCreate()->getIln()->getCode(),
+                            "ilnSecret" => $record->getRcrCreate()->getIln()->getSecret(),
+                            "rcrCode" => $record->getRcrCreate()->getCode(),
+                            "ppn" => $record->getPpn(),
+                            "idRecord" => $record->getId()
+                        ]
+                    )
+                );
+            } else {
+                $session = $request->getSession();
+                $session->getFlashBag()->add('danger', "Le PPN <strong>$ppn</strong> n'a pas été trouvé pour ce chantier.");
+                return $this->redirect(
+                  $this->generateUrl("view_iln", ["code" => $iln->getCode(), "secret" => $iln->getSecret()])
+                );
+            }
+        }
+        return $this->render("iln/search_ppn.html.twig", [
+            "form" => $form->createView()
+        ]);
     }
 }
