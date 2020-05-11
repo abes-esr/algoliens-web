@@ -48,4 +48,16 @@
         </table>
     {% endfor %}
 
+    <h1>Information sur les chargements de notices</h1>
+    <ul>
+    {% for rcr in iln.rcrs %}
+        <li>{{ rcr.code }} - {{ rcr.label }}
+            <ul>
+            {% for batch in rcr.batchImports %}
+                <li>{{ batch.typeLabel }} : {{ batch.startDate.format("d-m-Y à h:i:s") }}</li>
+            {% endfor %}
+            </ul>
+        </li>
+    {% endfor %}
+    </ul>
 {% endblock %}
