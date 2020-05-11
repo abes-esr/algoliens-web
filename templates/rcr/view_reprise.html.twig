@@ -4,8 +4,18 @@
 
 {% block body %}
     {{ include("includes/_breadcrumb.html.twig", {'page': 'reprise'}) }}
+    <h1>Export</h1>
+    <p>Exporter les {{ countRecords }} notices à reprendre : </p>
+    <div class="row">
+         <div class="col-md-12">
+             Au format :
+    <a href="{{ url("export_rcr_reprise", {'ilnCode': iln.code, 'ilnSecret': iln.secret, 'rcrCode': rcr.code, 'format': 'xls'}) }}" class="btn btn-sm btn-outline-success">Excel / xls</a>
+            <a href="{{ url("export_rcr_reprise", {'ilnCode': iln.code, 'ilnSecret': iln.secret, 'rcrCode': rcr.code, 'format': 'xlsx'}) }}" class="btn btn-sm btn-outline-success">Excel / xlsx</a>
+            <a href="{{ url("export_rcr_reprise", {'ilnCode': iln.code, 'ilnSecret': iln.secret, 'rcrCode': rcr.code, 'format': 'ods'}) }}" class="btn btn-sm btn-outline-success">LibreOffice / ods</a>
+        </div>
+    </div>
     {% if iln.skipReasons|length > 0 %}
-        <p>Accès direct :
+        <h1>Accès direct</h1>
         <ul>
             {% for id, skipGroup in recordsByReason %}
                 {% if skipGroup.skipReason != "" %}
@@ -14,7 +24,6 @@
                 {% endif %}
             {% endfor %}
         </ul>
-        </p>
     {% endif %}
     {% for id, skipGroup in recordsByReason %}
         {% if (id != 0) or (skipGroup["records"]|length != 0) %}
