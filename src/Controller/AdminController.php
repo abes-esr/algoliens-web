@@ -8,8 +8,6 @@ use App\Entity\Rcr;
 use App\Entity\Record;
 use App\Repository\BatchImportRepository;
 use App\Repository\IlnRepository;
-use App\Repository\RcrRepository;
-use App\Repository\RecordRepository;
 use App\Service\WsHarvester;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -20,8 +18,6 @@ use Symfony\Contracts\EventDispatcher\Event;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpKernel\KernelInterface;
-use Symfony\Component\Process\PhpExecutableFinder;
-use Symfony\Component\Process\Process;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
@@ -154,5 +150,29 @@ class AdminController extends AbstractController
         $session->getFlashBag()->add('success', $count." RCR ajoutés.");
 
         return $this->redirect($this->generateUrl("admin"));
+    }
+
+    /**
+     * @Route("/fix-reprises", name="admin_fix_reprises")
+     */
+    public function fixReprises(EntityManagerInterface $em, Request $request) {
+        $reprisesForIln = $em->getRepository(Record::class)->countRepriseForRcrs();
+
+        $count = 0;
+        foreach ($reprisesForIln as $reprise) {
+            /** @var Rcr $reprise ["rcr"] */
+            if ($reprise["rcr"]->getNumberOfRecordsReprise() != $reprise["count"]) {
+                $reprise["rcr"]->setNumberOfRecordsReprise($reprise["count"]);
+                $count++;
+                $em->persist($reprise["rcr"]);
+            }
+        }
+        $em->flush();
+        $session = $request->getSession();
+        $session->getFlashBag()->add('success', $count." RCR corrigé(s).");
+
+        return $this->redirect(
+            $this->generateUrl("admin")
+        );
     }
 }

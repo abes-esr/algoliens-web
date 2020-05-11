@@ -4,7 +4,6 @@ namespace App\Repository;
 
 use App\Entity\BatchImport;
 use App\Entity\Iln;
-use App\Entity\LinkError;
 use App\Entity\Rcr;
 use App\Entity\Record;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -116,6 +115,19 @@ class RecordRepository extends ServiceEntityRepository
         return $this->countByStatusForRcr($rcr, Record::RECORD_VALIDATED);
     }
 
+    public function countRepriseForRcrs()
+    {
+        $result = $this->createQueryBuilder("record")
+            ->select("rcrClass as rcr", "count(record.id) as count")
+            ->from(Rcr::class, "rcrClass")
+            ->where('record.rcrCreate = rcrClass and record.status = :status')
+            ->setParameter('status', Record::RECORD_SKIPPED)
+            ->groupBy("rcrClass")
+            ->getQuery()
+            ->getResult();
+        return $result;
+    }
+
     public function countRepriseForRcr(Rcr $rcr)
     {
         return $this->countByStatusForRcr($rcr, Record::RECORD_SKIPPED);
@@ -163,7 +175,8 @@ class RecordRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function findByPpnAndIln(string $ppn, Iln $iln) {
+    public function findByPpnAndIln(string $ppn, Iln $iln)
+    {
         return $this->createQueryBuilder('rec')
             ->join("rec.rcrCreate", "rcr")
             ->where("rec.ppn = :ppn and rcr.iln = :iln")
