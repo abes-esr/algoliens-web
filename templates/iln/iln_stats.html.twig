@@ -54,7 +54,7 @@
         <li>{{ rcr.code }} - {{ rcr.label }}
             <ul>
             {% for batch in rcr.batchImports %}
-                <li>{{ batch.typeLabel }} : {{ batch.startDate.format("d-m-Y à h:i:s") }}</li>
+                <li>{{ batch.typeLabel }} : {{ batch.startDate.format("d-m-Y à h:i:s") }} - <a href="{{ url("export_batch_import", {'code': iln.code, 'secret': iln.secret, 'id': batch.id}) }}">export les PPN des {{ batch.countRecords }} notices</a></li>
             {% endfor %}
             </ul>
         </li>

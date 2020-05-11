@@ -4,15 +4,17 @@
 namespace App\Controller;
 
 
+use App\Entity\BatchImport;
 use App\Entity\Iln;
 use App\Repository\IlnRepository;
 use App\Repository\RecordRepository;
 use App\Service\AbesLanguages;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Annotation\Route;
 
 class IlnController extends AbstractController
@@ -70,7 +72,7 @@ class IlnController extends AbstractController
     /**
      * @Route("/chantier/{code}-{secret}/reprises", name="view_iln_reprises")
      */
-    public function ilnVienwReprises(RecordRepository $recordRepository, Iln $iln)
+    public function ilnVienwReprises(Iln $iln)
     {
         $skipReasons = $iln->getSkipReasons();
         return $this->render("iln/reprises.html.twig", ["iln" => $iln, "skipReaons" => $skipReasons]);
@@ -118,5 +120,31 @@ class IlnController extends AbstractController
         return $this->render("iln/search_ppn.html.twig", [
             "form" => $form->createView()
         ]);
+    }
+
+    /**
+     * @Route("/chantier/{code}-{secret}/export-batch/{id}", name="export_batch_import")
+     */
+    public function exportBatchImport(BatchImport $batchImport)
+    {
+        $filename = "export_batch_".$batchImport->getId().".txt";
+        $content = "";
+        foreach ($batchImport->getRecords() as $record) {
+            $content .= $record->getPpn()."\n";
+        }
+
+        $response = new Response($content);
+
+        // Create the disposition of the file
+        $disposition = $response->headers->makeDisposition(
+            ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+            $filename
+        );
+
+        // Set the content disposition
+        $response->headers->set('Content-Disposition', $disposition);
+        $response->headers->set('Content-Type', 'text/plain');
+        // Dispatch request
+        return $response;
     }
 }
