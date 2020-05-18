@@ -23,7 +23,7 @@ Afin d'installer une copie de cet outil, la procédure à suivre est la suivante
 ## Étapes d'installation
 Récupération des sources sur github, via le téléchargement du [Zip Master](https://github.com/abes-esr/algoliens-web/archive/master.zip) ou clonage du dépôt : 
 ```
-git clone https://github.com/abes-esr/algoliens-web/archive/master.zip
+git clone https://github.com/abes-esr/algoliens-web.git
 ```
 
 Dans le répertoire ainsi créé, on va ajouter un fichier .env.local qui contiendra les informations suivantes :
@@ -43,6 +43,7 @@ Les variables à modifier étant :
 Une fois cette configuration effectuée, on lancera les commandes suivantes :
 
 - ```composer install``` : récupération des librairies PHP qui nous seront utiles;
+- ```yarn install``` : installation de Encore pour la gestion du CSS;
 - ```php bin/console doctrine:database:create``` : création de la base de données via Symfony
 - ```php bin/console doctrine:schema:update --force``` : création de la structure de la base de données
 
