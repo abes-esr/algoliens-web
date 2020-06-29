@@ -23,7 +23,6 @@ use Symfony\Component\Routing\Annotation\Route;
 /**
  * @Route("/admin")
  */
-
 class AdminController extends AbstractController
 {
     /**
@@ -65,13 +64,19 @@ class AdminController extends AbstractController
     }
 
     /**
-     * @Route("/iln/{ilnCode}/rcr/{rcrCode}/batch/new/{batchType}", name="admin_batch_new")
+     * @Route("/iln/{ilnCode}/rcr/{rcrCode}/batch/new/{batchType}/{batchImport?}", name="admin_batch_new")
      * @Entity("rcr", expr="repository.findOneBy({'code': rcrCode})")
      */
-    public function batchNew(Rcr $rcr, $batchType, KernelInterface $kernel, EventDispatcherInterface $eventDispatcher, LoggerInterface $logger, EntityManagerInterface $em) {
+    public function batchNew(Rcr $rcr, $batchType, KernelInterface $kernel, EventDispatcherInterface $eventDispatcher, LoggerInterface $logger, EntityManagerInterface $em, BatchImport $batchImport = null)
+    {
+        if (!is_null($batchImport)) {
+            $this->getDoctrine()->getRepository(Record::class)->deactivateForBatch($batchImport);
+            $batchImport->setStatus(BatchImport::STATUS_RUNNING);
+        } else {
+            $batchImport = new BatchImport($rcr, $batchType);
+            $batchImport->setStatus(BatchImport::STATUS_RUNNING);
+        }
 
-        $batchImport = new BatchImport($rcr, $batchType);
-        $batchImport->setStatus(BatchImport::STATUS_RUNNING);
         $em->persist($batchImport);
         $em->flush();
 
@@ -81,7 +86,7 @@ class AdminController extends AbstractController
             $wsHarvester = new WsHarvester($em);
             $wsHarvester->runNewBatchAlreadyCreated($batchImport, $logger);
 
-            $logger->debug("G : ".$batchImport->getStartDate()->format("Y-m-d H:i:s"));
+            $logger->debug("G : " . $batchImport->getStartDate()->format("Y-m-d H:i:s"));
 
         });
         return $this->redirect($this->generateUrl("admin_rcr", ["ilnCode" => $rcr->getIln()->getCode(), "rcrCode" => $rcr->getCode()]));
@@ -91,7 +96,8 @@ class AdminController extends AbstractController
      * @Route("/iln/{ilnCode}/rcr/{rcrCode}/batch/{batchId}/{action}/{confirm?}", name="admin_batch_action")
      * @Entity("batchImport", expr="repository.findOneBy({'id': batchId})")
      */
-    public function batch(EntityManagerInterface $em, BatchImport $batchImport, string $action, string $confirm = null) {
+    public function batch(EntityManagerInterface $em, BatchImport $batchImport, string $action, string $confirm = null)
+    {
         if ($confirm == "confirm") {
             if ($action == "deleterecords") {
                 $this->getDoctrine()->getRepository(Record::class)->deleteForBatch($batchImport);
@@ -119,7 +125,8 @@ class AdminController extends AbstractController
      * @Route("/iln/{ilnCode}/import-rcr", name="admin_iln_populate_rcr")
      * @Entity("iln", expr="repository.findOneBy({'code': ilnCode})")
      */
-    public function ilnPopulateWithRcr(Iln $iln, EntityManagerInterface $em, Request $request) {
+    public function ilnPopulateWithRcr(Iln $iln, EntityManagerInterface $em, Request $request)
+    {
         $urlWs = "https://www.idref.fr/services/iln2rcr/" . $iln->getNumber() . "&format=text/json";
         $rcrJson = file_get_contents($urlWs);
         $rcrArray = json_decode($rcrJson);
@@ -147,7 +154,7 @@ class AdminController extends AbstractController
         $em->flush();
 
         $session = $request->getSession();
-        $session->getFlashBag()->add('success', $count." RCR ajoutés.");
+        $session->getFlashBag()->add('success', $count . " RCR ajoutés.");
 
         return $this->redirect($this->generateUrl("admin"));
     }
@@ -155,7 +162,8 @@ class AdminController extends AbstractController
     /**
      * @Route("/fix-reprises", name="admin_fix_reprises")
      */
-    public function fixReprises(EntityManagerInterface $em, Request $request) {
+    public function fixReprises(EntityManagerInterface $em, Request $request)
+    {
         $reprisesForIln = $em->getRepository(Record::class)->countRepriseForRcrs();
 
         $count = 0;
@@ -169,7 +177,7 @@ class AdminController extends AbstractController
         }
         $em->flush();
         $session = $request->getSession();
-        $session->getFlashBag()->add('success', $count." RCR corrigé(s).");
+        $session->getFlashBag()->add('success', $count . " RCR corrigé(s).");
 
         return $this->redirect(
             $this->generateUrl("admin")

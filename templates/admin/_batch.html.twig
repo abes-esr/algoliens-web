@@ -22,6 +22,9 @@
     <td>
         {% if batch.status == constant('App\\Entity\\BatchImport::STATUS_FINISHED') %}
             <a href="{{ url("admin_batch_action", {ilnCode: batch.rcr.iln.code, rcrCode: batch.rcr.code, batchId: batch.id, action: 'deleterecords'}) }}" class="btn btn-danger btn-sm">supprimer les notices</a>
+            <br/>
+            <a href="{{ url("admin_batch_new", {ilnCode: batch.rcr.iln.code, rcrCode: batch.rcr.code, batchId: batch.id, batchType: batch.type}) }}" class="btn btn-outline-secondary btn-sm">rafraichir</a>
+
         {% elseif batch.status == constant('App\\Entity\\BatchImport::STATUS_CANCEL') %}
             <a href="{{ url("admin_batch_action", {ilnCode: batch.rcr.iln.code, rcrCode: batch.rcr.code, batchId: batch.id, action: 'deletebatch'}) }}" class="btn btn-outline-danger btn-sm">supprimer le batch</a>
         {% endif %}

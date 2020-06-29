@@ -180,6 +180,16 @@ class BatchImport
         return $this;
     }
 
+    public function updateCountErrors()
+    {
+        /** @var Record $record */
+        $count = 0;
+        foreach ($this->getRecords() as $record) {
+            $count += sizeof($record->getLinkErrors());
+        }
+        $this->setCountErrors($count);
+    }
+
     public function getDurationAsString(): string
     {
         return $this->getDuration()->format("%Imin %ss");

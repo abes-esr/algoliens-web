@@ -15,6 +15,7 @@ use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 class WsHarvester
 {
     private $em;
+    /** @var BatchImport $batchImport */
     private $batchImport;
 
     public function __construct(EntityManagerInterface $em)
@@ -32,10 +33,23 @@ class WsHarvester
         $error = preg_split("/\t/", $line);
         if (sizeof($error) > 1) {
             $ppn = trim($error[0]);
+            /** @var Record $record */
             if (isset($existingRecords[$ppn])) {
                 $record = $existingRecords[$ppn];
             } else {
                 $record = $this->em->getRepository(Record::class)->findOneBy(["ppn" => $ppn, "rcrCreate" => $this->batchImport->getRcr()]);
+            }
+
+            if ($record->getStatus() == Record::RECORD_FIXED_OUTSIDE) {
+                // C'est une notice que l'on est en train de recharger, on va faire le nécessaire
+                // Elle redevient une todo
+                $record->setStatus(Record::RECORD_TODO);
+
+                // On supprime toutes les erreurs existantes pour avoir quelque chose de frais
+                foreach ($record->getLinkErrors() as $linkError) {
+                    $this->em->remove($linkError);
+                }
+                $this->em->flush();
             }
 
             if (is_null($record)) {
@@ -47,7 +61,7 @@ class WsHarvester
                 $date = trim($error[4]);
                 $date = \DateTime::createFromFormat('Y-m-j H:i:s', $date);
                 $record->setLastUpdate($date);
-                $record->setStatus(0);
+                $record->setStatus(Record::RECORD_TODO);
                 $record->setDocTypeCode($error[6]);
                 $record->setDocTypeLabel($error[7]);
                 $record->setBatchImport($this->batchImport);
@@ -59,9 +73,15 @@ class WsHarvester
                 return;
             }
 
+            if ($record->getStatus() !== Record::RECORD_TODO) {
+                // Si ici on est sur un record qui est en skipped / validated c'est qu'on l'a déjà traité on ne
+                // doit pas s'ee occuper à nouveau;
+                return;
+            }
+
             $existingRecords[$ppn] = $record;
 
-            $this->batchImport->setCountErrors($this->batchImport->getCountErrors() + 1);
+            $this->batchImport->updateCountErrors();
             $errorObject = new LinkError();
             $errorObject->setErrorText($error[3]);
             $errorObject->setErrorCode($error[5]);
@@ -96,6 +116,14 @@ class WsHarvester
         $ppnPaprikaAlreadySet = [];
 
         $existingRecords = [];
+//
+//        if ($this->batchImport->getCountRecords() > 0) {
+//            // Cas où l'on a déjà importé des notices et que l'on procède à un rafraichissement
+//            /** @var Record $record */
+//            foreach ($this->batchImport->getRecords() as $record) {
+//                $existingRecords[$record->getPpn()] = $record;
+//            }
+//        }
         foreach ($lines as $line) {
             $this->processLine($existingRecords, $ppnPaprikaAlreadySet, $line);
         }
@@ -144,27 +172,22 @@ class WsHarvester
 
         $this->batchImport->setStartDate(new \DateTime());
         $this->batchImport->setStatus(BatchImport::STATUS_RUNNING);
-        $logger->debug("B : " . $this->batchImport->getStartDate()->format("Y-m-d H:i:s"));
 
         $this->em->persist($this->batchImport);
         $this->em->flush();
 
         $content = $this->getApiContent();
-        $logger->debug("C : " . $this->batchImport->getStartDate()->format("Y-m-d H:i:s"));
 
         $this->processContent($content);
         $this->batchImport->setEndDate(new \DateTime());
         $this->batchImport->setStatus(BatchImport::STATUS_FINISHED);
         $this->em->persist($this->batchImport);
         $this->em->flush();
-        $logger->debug("D : " . $this->batchImport->getStartDate()->format("Y-m-d H:i:s"));
 
         $this->em->getRepository(Rcr::class)->updateStats($this->batchImport->getRcr());
         $this->em->persist($this->batchImport->getRcr());
 
         $this->em->flush();
-        $logger->debug("E : " . $this->batchImport->getStartDate()->format("Y-m-d H:i:s"));
-
         return $this->batchImport;
     }
 

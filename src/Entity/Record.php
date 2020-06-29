@@ -17,6 +17,7 @@ class Record
     const RECORD_TODO = 0;
     const RECORD_VALIDATED = 1;
     const RECORD_SKIPPED = 2;
+    const RECORD_FIXED_OUTSIDE = 3;
 
     /**
      * @ORM\Column(type="datetime", nullable=true)

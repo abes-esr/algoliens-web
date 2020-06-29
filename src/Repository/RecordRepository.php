@@ -153,6 +153,17 @@ class RecordRepository extends ServiceEntityRepository
             ->execute();
     }
 
+    public function deactivateForBatch(BatchImport $batchImport) {
+        // On change le statut des notices concernées;
+        $this->createQueryBuilder('r')
+            ->update()
+            ->set('r.status', Record::RECORD_FIXED_OUTSIDE)
+            ->where("r.batchImport = :batchImport and r.status = ".Record::RECORD_TODO)
+            ->setParameter('batchImport', $batchImport)
+            ->getQuery()
+            ->execute();
+    }
+
     public function findMissingMarcForIln(Iln $iln)
     {
         return $this->createQueryBuilder('l')
