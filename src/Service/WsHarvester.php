@@ -19,6 +19,7 @@ class WsHarvester
     private $em;
     /** @var BatchImport $batchImport */
     private $batchImport;
+    private $logger;
 
     public function __construct(EntityManagerInterface $em)
     {
@@ -72,7 +73,6 @@ class WsHarvester
                 foreach ($record->getLinkErrors() as $linkError) {
                     $this->em->remove($linkError);
                 }
-                $this->em->flush();
             }
 
 
@@ -119,14 +119,14 @@ class WsHarvester
         $ppnPaprikaAlreadySet = [];
 
         $existingRecords = [];
-//
-//        if ($this->batchImport->getCountRecords() > 0) {
-//            // Cas où l'on a déjà importé des notices et que l'on procède à un rafraichissement
-//            /** @var Record $record */
-//            foreach ($this->batchImport->getRecords() as $record) {
-//                $existingRecords[$record->getPpn()] = $record;
-//            }
-//        }
+
+        if ($this->batchImport->getCountRecords() > 0) {
+            // Cas où l'on a déjà importé des notices et que l'on procède à un rafraichissement
+            /** @var Record $record */
+            foreach ($this->batchImport->getRecords() as $record) {
+                $existingRecords[$record->getPpn()] = $record;
+            }
+        }
         foreach ($lines as $line) {
             $this->processLine($existingRecords, $ppnPaprikaAlreadySet, $line);
         }
@@ -168,18 +168,15 @@ class WsHarvester
 
     public function runNewBatchAlreadyCreated(BatchImport $batchImport, $logger)
     {
+        $this->logger = $logger;
         $this->batchImport = $batchImport;
-        $logger->debug("START");
-        $logger->debug("A : " . $this->batchImport->getStartDate()->format("Y-m-d H:i:s"));
 
         $this->batchImport->setStartDate(new DateTime());
         $this->batchImport->setStatus(BatchImport::STATUS_RUNNING);
-
         $this->em->persist($this->batchImport);
         $this->em->flush();
 
         $content = $this->getApiContent();
-
         $this->processContent($content);
         $this->batchImport->setEndDate(new DateTime());
         $this->batchImport->setStatus(BatchImport::STATUS_FINISHED);

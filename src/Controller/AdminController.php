@@ -64,8 +64,9 @@ class AdminController extends AbstractController
     }
 
     /**
-     * @Route("/iln/{ilnCode}/rcr/{rcrCode}/batch/new/{batchType}/{batchImport?}", name="admin_batch_new")
+     * @Route("/iln/{ilnCode}/rcr/{rcrCode}/batch/new/{batchType}/{batchId?}", name="admin_batch_new")
      * @Entity("rcr", expr="repository.findOneBy({'code': rcrCode})")
+     * @Entity("batchImport", expr="repository.findOneBy({'id': batchId})")
      */
     public function batchNew(Rcr $rcr, $batchType, EventDispatcherInterface $eventDispatcher, LoggerInterface $logger, EntityManagerInterface $em, BatchImport $batchImport = null)
     {
@@ -81,7 +82,6 @@ class AdminController extends AbstractController
 
         $em->persist($batchImport);
         $em->flush();
-
 
         $eventDispatcher->addListener(KernelEvents::TERMINATE, function (Event $event) use ($logger, $batchImport, $em) {
             // Launch the job
