@@ -7,10 +7,12 @@ use App\Entity\LinkError;
 use App\Entity\PaprikaLink;
 use App\Entity\Rcr;
 use App\Entity\Record;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
+use SimpleXMLElement;
 use Symfony\Component\HttpClient\Exception\ClientException;
 use Symfony\Component\HttpClient\HttpClient;
-use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
 class WsHarvester
 {
@@ -40,18 +42,6 @@ class WsHarvester
                 $record = $this->em->getRepository(Record::class)->findOneBy(["ppn" => $ppn, "rcrCreate" => $this->batchImport->getRcr()]);
             }
 
-            if ($record->getStatus() == Record::RECORD_FIXED_OUTSIDE) {
-                // C'est une notice que l'on est en train de recharger, on va faire le nécessaire
-                // Elle redevient une todo
-                $record->setStatus(Record::RECORD_TODO);
-
-                // On supprime toutes les erreurs existantes pour avoir quelque chose de frais
-                foreach ($record->getLinkErrors() as $linkError) {
-                    $this->em->remove($linkError);
-                }
-                $this->em->flush();
-            }
-
             if (is_null($record)) {
                 $this->batchImport->setCountRecords($this->batchImport->getCountRecords() + 1);
                 $record = new Record();
@@ -59,7 +49,7 @@ class WsHarvester
                 $record->setRcrCreate($this->batchImport->getRcr());
 
                 $date = trim($error[4]);
-                $date = \DateTime::createFromFormat('Y-m-j H:i:s', $date);
+                $date = DateTime::createFromFormat('Y-m-j H:i:s', $date);
                 $record->setLastUpdate($date);
                 $record->setStatus(Record::RECORD_TODO);
                 $record->setDocTypeCode($error[6]);
@@ -72,6 +62,19 @@ class WsHarvester
                 // On a déjà récupéré cette notice lors d'un autre import, plus besoin de la traiter
                 return;
             }
+
+            if ($record->getStatus() == Record::RECORD_FIXED_OUTSIDE) {
+                // C'est une notice que l'on est en train de recharger, on va faire le nécessaire
+                // Elle redevient une todo
+                $record->setStatus(Record::RECORD_TODO);
+
+                // On supprime toutes les erreurs existantes pour avoir quelque chose de frais
+                foreach ($record->getLinkErrors() as $linkError) {
+                    $this->em->remove($linkError);
+                }
+                $this->em->flush();
+            }
+
 
             if ($record->getStatus() !== Record::RECORD_TODO) {
                 // Si ici on est sur un record qui est en skipped / validated c'est qu'on l'a déjà traité on ne
@@ -144,7 +147,6 @@ class WsHarvester
     {
         if ($rownum == 0) {
             // Si on arrive à 0, on abandonne
-            $this->io->writeln("<error>Récupération impossible, on abandonne</error>");
             return null;
         }
         $url = $this->getUrl() . "&rownum=" . $rownum;
@@ -157,7 +159,7 @@ class WsHarvester
                 'max_duration' => 0
             ]);
             $content = $response->getContent();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->getApiContent(intval($rownum / 2));
         }
         $this->storeContent($content);
@@ -170,7 +172,7 @@ class WsHarvester
         $logger->debug("START");
         $logger->debug("A : " . $this->batchImport->getStartDate()->format("Y-m-d H:i:s"));
 
-        $this->batchImport->setStartDate(new \DateTime());
+        $this->batchImport->setStartDate(new DateTime());
         $this->batchImport->setStatus(BatchImport::STATUS_RUNNING);
 
         $this->em->persist($this->batchImport);
@@ -179,7 +181,7 @@ class WsHarvester
         $content = $this->getApiContent();
 
         $this->processContent($content);
-        $this->batchImport->setEndDate(new \DateTime());
+        $this->batchImport->setEndDate(new DateTime());
         $this->batchImport->setStatus(BatchImport::STATUS_FINISHED);
         $this->em->persist($this->batchImport);
         $this->em->flush();
@@ -194,7 +196,7 @@ class WsHarvester
     public function runNewBatch(Rcr $rcr, int $batchType)
     {
         $batchImport = new BatchImport($rcr, $batchType);
-        return $this->runNewBatchAlreadyCreated($batchImport);
+        return $this->runNewBatchAlreadyCreated($batchImport, null);
     }
 
     public function populateRecordFromAbes(Record $inputRecord)
@@ -212,7 +214,7 @@ class WsHarvester
                 return $inputRecord;
             }
         }
-        $abesRecord = new \SimpleXMLElement($xml);
+        $abesRecord = new SimpleXMLElement($xml);
         $unimarc = "";
         foreach ($abesRecord->datafield as $datafield) {
             $tag = (string)$datafield->attributes()["tag"][0];

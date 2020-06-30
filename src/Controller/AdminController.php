@@ -9,6 +9,7 @@ use App\Entity\Record;
 use App\Repository\BatchImportRepository;
 use App\Repository\IlnRepository;
 use App\Service\WsHarvester;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
@@ -17,7 +18,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\EventDispatcher\Event;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
@@ -56,7 +56,7 @@ class AdminController extends AbstractController
      * @Entity("iln", expr="repository.findOneBy({'code': ilnCode})")
      * @Entity("rcr", expr="repository.findOneBy({'code': rcrCode})")
      */
-    public function rcr(Iln $iln, Rcr $rcr)
+    public function rcr(Rcr $rcr)
     {
         return $this->render('admin/rcr.html.twig', [
             'rcr' => $rcr
@@ -67,11 +67,13 @@ class AdminController extends AbstractController
      * @Route("/iln/{ilnCode}/rcr/{rcrCode}/batch/new/{batchType}/{batchImport?}", name="admin_batch_new")
      * @Entity("rcr", expr="repository.findOneBy({'code': rcrCode})")
      */
-    public function batchNew(Rcr $rcr, $batchType, KernelInterface $kernel, EventDispatcherInterface $eventDispatcher, LoggerInterface $logger, EntityManagerInterface $em, BatchImport $batchImport = null)
+    public function batchNew(Rcr $rcr, $batchType, EventDispatcherInterface $eventDispatcher, LoggerInterface $logger, EntityManagerInterface $em, BatchImport $batchImport = null)
     {
         if (!is_null($batchImport)) {
             $this->getDoctrine()->getRepository(Record::class)->deactivateForBatch($batchImport);
             $batchImport->setStatus(BatchImport::STATUS_RUNNING);
+            $batchImport->setStartDate(new DateTime());
+            $batchImport->setEndDate(null);
         } else {
             $batchImport = new BatchImport($rcr, $batchType);
             $batchImport->setStatus(BatchImport::STATUS_RUNNING);
@@ -82,7 +84,6 @@ class AdminController extends AbstractController
 
         $eventDispatcher->addListener(KernelEvents::TERMINATE, function (Event $event) use ($logger, $batchImport, $em) {
             // Launch the job
-
             $wsHarvester = new WsHarvester($em);
             $wsHarvester->runNewBatchAlreadyCreated($batchImport, $logger);
 
@@ -144,7 +145,7 @@ class AdminController extends AbstractController
             }
             $rcr->setCode($library->rcr);
             $rcr->setLabel($library->shortname);
-            $rcr->setUpdated(new \DateTime());
+            $rcr->setUpdated(new DateTime());
             $rcr->setIln($iln);
             $rcr->setHarvested(0);
             $rcr->setActive(1);

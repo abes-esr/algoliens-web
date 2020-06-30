@@ -28,6 +28,5 @@
         {% elseif batch.status == constant('App\\Entity\\BatchImport::STATUS_CANCEL') %}
             <a href="{{ url("admin_batch_action", {ilnCode: batch.rcr.iln.code, rcrCode: batch.rcr.code, batchId: batch.id, action: 'deletebatch'}) }}" class="btn btn-outline-danger btn-sm">supprimer le batch</a>
         {% endif %}
-        &nbsp;
     </td>
 </tr>
