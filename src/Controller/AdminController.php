@@ -82,10 +82,12 @@ class AdminController extends AbstractController
         $em->persist($batchImport);
         $em->flush();
 
+
         $eventDispatcher->addListener(KernelEvents::TERMINATE, function (Event $event) use ($logger, $batchImport, $em) {
             // Launch the job
             $wsHarvester = new WsHarvester($em);
             $wsHarvester->runNewBatchAlreadyCreated($batchImport, $logger);
+            $em->getRepository(Rcr::class)->updateStats($batchImport->getRcr());
 
             $logger->debug("G : " . $batchImport->getStartDate()->format("Y-m-d H:i:s"));
 

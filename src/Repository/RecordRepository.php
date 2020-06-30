@@ -112,7 +112,7 @@ class RecordRepository extends ServiceEntityRepository
 
     public function countCorrectedForRcr(Rcr $rcr)
     {
-        return $this->countByStatusForRcr($rcr, Record::RECORD_VALIDATED);
+        return $this->countByStatusForRcr($rcr, Record::RECORD_VALIDATED) + $this->countByStatusForRcr($rcr, Record::RECORD_FIXED_OUTSIDE);
     }
 
     public function countRepriseForRcrs()
@@ -153,12 +153,13 @@ class RecordRepository extends ServiceEntityRepository
             ->execute();
     }
 
-    public function deactivateForBatch(BatchImport $batchImport) {
+    public function deactivateForBatch(BatchImport $batchImport)
+    {
         // On change le statut des notices concernées;
         $this->createQueryBuilder('r')
             ->update()
             ->set('r.status', Record::RECORD_FIXED_OUTSIDE)
-            ->where("r.batchImport = :batchImport and r.status = ".Record::RECORD_TODO)
+            ->where("r.batchImport = :batchImport and r.status = " . Record::RECORD_TODO)
             ->setParameter('batchImport', $batchImport)
             ->getQuery()
             ->execute();

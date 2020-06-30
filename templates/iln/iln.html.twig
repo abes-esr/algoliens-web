@@ -18,7 +18,8 @@
         </p>
     </div>
     <h1>Accès par PPN</h1>
-    <p>Si pour une raison quelconque vous avez besoin de retrouver la fiche correspond à une notice particulière, saisissez le ci-dessous : </p>
+    <p>Si pour une raison quelconque vous avez besoin de retrouver la fiche correspond à une notice particulière,
+        saisissez le ci-dessous : </p>
     {{ render(controller(
         'App\\Controller\\IlnController::searchPpn', {'code': iln.code, 'secret': iln.secret}
     )) }}
@@ -44,11 +45,11 @@
                 </td>
                 <td>
                     {% if rcr.numberOfRecordsReprise != 0 %}
-                    <a href="{{ url("view_rcr_reprise", {ilnCode: iln.code, rcrCode: rcr.code, ilnSecret: iln.secret}) }}">{{ rcr.numberOfRecordsReprise }}</a>
+                        <a href="{{ url("view_rcr_reprise", {ilnCode: iln.code, rcrCode: rcr.code, ilnSecret: iln.secret}) }}">{{ rcr.numberOfRecordsReprise }}</a>
+                    {% else %}
+                        -
+                    {% endif %}
                 </td>
-                {% else %}
-                    -
-                {% endif %}
             </tr>
         {% endfor %}
     </table>

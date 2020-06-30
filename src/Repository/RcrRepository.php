@@ -29,7 +29,7 @@ class RcrRepository extends ServiceEntityRepository
         $recordRepository = $this->getEntityManager()->getRepository(Record::class);
 
         $countRecords = sizeof($recordRepository->findBy(['rcrCreate' => $rcr]));
-        $countRecordsCorrected = sizeof($recordRepository->findBy(['rcrCreate' => $rcr, 'status' => Record::RECORD_VALIDATED]));
+        $countRecordsCorrected = $recordRepository->countCorrectedForRcr($rcr);
         $countRecordsReprise = sizeof($recordRepository->findBy(['rcrCreate' => $rcr, 'status' => Record::RECORD_SKIPPED]));
 
         $q = $this->createQueryBuilder('l')
