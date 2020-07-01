@@ -29,7 +29,8 @@ class RcrRepository extends ServiceEntityRepository
         $recordRepository = $this->getEntityManager()->getRepository(Record::class);
 
         $countRecords = sizeof($recordRepository->findBy(['rcrCreate' => $rcr]));
-        $countRecordsCorrected = $recordRepository->countCorrectedForRcr($rcr);
+        $countRecordsCorrected = sizeof($recordRepository->findBy(['rcrCreate' => $rcr, 'status' => Record::RECORD_VALIDATED]));
+        $countRecordsCorrectedOutside = sizeof($recordRepository->findBy(['rcrCreate' => $rcr, 'status' => Record::RECORD_FIXED_OUTSIDE]));
         $countRecordsReprise = sizeof($recordRepository->findBy(['rcrCreate' => $rcr, 'status' => Record::RECORD_SKIPPED]));
 
         $q = $this->createQueryBuilder('l')
@@ -37,13 +38,16 @@ class RcrRepository extends ServiceEntityRepository
             ->set('l.numberOfRecords', ':countRecords')
             ->set('l.numberOfRecordsCorrected', ':countRecordsCorrected')
             ->set('l.numberOfRecordsReprise', ':countRecordsReprise')
+            ->set('l.numberOfRecordsFixedOutside', ':countRecordsCorrectedOutside')
             ->setParameter('countRecords', $countRecords)
             ->setParameter('countRecordsCorrected', $countRecordsCorrected)
             ->setParameter('countRecordsReprise', $countRecordsReprise)
+            ->setParameter('countRecordsCorrectedOutside', $countRecordsCorrectedOutside)
             ->where('l.id = :rcrId')
             ->setParameter('rcrId', $rcr->getId())
             ->getQuery();
-        $q->execute();
+        $count = $q->execute();
+        return $count;
 
     }
     // /**

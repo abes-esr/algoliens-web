@@ -167,17 +167,26 @@ class AdminController extends AbstractController
      */
     public function fixReprises(EntityManagerInterface $em, Request $request)
     {
-        $reprisesForIln = $em->getRepository(Record::class)->countRepriseForRcrs();
-
+        $rcrs = $em->getRepository(Rcr::class)->findAll();
         $count = 0;
-        foreach ($reprisesForIln as $reprise) {
-            /** @var Rcr $reprise ["rcr"] */
-            if ($reprise["rcr"]->getNumberOfRecordsReprise() != $reprise["count"]) {
-                $reprise["rcr"]->setNumberOfRecordsReprise($reprise["count"]);
+        /** @var Rcr $rcr */
+        foreach ($rcrs as $rcr) {
+            $updated = $em->getRepository(Rcr::class)->updateStats($rcr);
+            if ($updated != 0) {
                 $count++;
-                $em->persist($reprise["rcr"]);
             }
         }
+
+//        $reprisesForIln = $em->getRepository(Record::class)->countRepriseForRcrs();
+//        $count = 0;
+//        foreach ($reprisesForIln as $reprise) {
+//            /** @var Rcr $reprise ["rcr"] */
+//            if ($reprise["rcr"]->getNumberOfRecordsReprise() != $reprise["count"]) {
+//                $reprise["rcr"]->setNumberOfRecordsReprise($reprise["count"]);
+//                $count++;
+//                $em->persist($reprise["rcr"]);
+//            }
+//        }
         $em->flush();
         $session = $request->getSession();
         $session->getFlashBag()->add('success', $count . " RCR corrigé(s).");
