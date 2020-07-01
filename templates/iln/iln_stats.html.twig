@@ -14,7 +14,16 @@
             {% endfor %}
         </ul>
     {% endif %}
-
+    <h1>Corrections hors algoliens</h1>
+    <p>Depuis les premiers imports de notices dans cette interface pour {{ iln.label }}, des notices ont été corrigées
+        sans être marquées comme corrigées dans cette interface et n'apparaissent plus ici. S'il ne nous est pas
+        possible d'identifier les dates de correction de ces notices nous savons qu'elles ont disparues d'Algoliens et
+        sont donc considérées comme corrigées (ces chiffres ne sont pas mis à jour en temps réel) : </p>
+    <ul>
+        {% for rcr in iln.rcrsWithRecordsFixedOutside %}
+            <li>{{ rcr.label }} : {{ rcr.getNumberOfRecordsFixedOutside }}</li>
+        {% endfor %}
+    </ul>
     <h1>Historique</h1>
     {% for year, yeardetail in stats %}
         {% set corrected = 0 %}

@@ -105,7 +105,9 @@ class Iln
      */
     public function getRcrs(): Collection
     {
-        $output = $this->rcrs->filter(function($rcr) { return $rcr->getActive() == 1; });
+        $output = $this->rcrs->filter(function ($rcr) {
+            return $rcr->getActive() == 1;
+        });
         return $output;
     }
 
@@ -114,10 +116,22 @@ class Iln
      */
     public function getRcrsWithRecords(): Collection
     {
-        $output = $this->rcrs->filter(function($rcr) { return (($rcr->getActive() == 1) and ($rcr->getNumberOfRecords() > 0)); });
+        $output = $this->rcrs->filter(function ($rcr) {
+            return (($rcr->getActive() == 1) and ($rcr->getNumberOfRecords() > 0));
+        });
         return $output;
     }
 
+    /**
+     * @return Collection|Rcr[]
+     */
+    public function getRcrsWithRecordsFixedOutside(): Collection
+    {
+        $output = $this->rcrs->filter(function (Rcr $rcr) {
+            return (($rcr->getActive() == 1) and ($rcr->getNumberOfRecordsFixedOutside() > 0));
+        });
+        return $output;
+    }
 
 
     public function addRcr(Rcr $rcr): self
@@ -143,20 +157,36 @@ class Iln
         return $this;
     }
 
-    public function getNumberOfRecords() {
-        return array_reduce($this->getRcrs()->getValues(), function ($total, $rcr) { $total += $rcr->getNumberOfRecords(); return $total; });
+    public function getNumberOfRecords()
+    {
+        return array_reduce($this->getRcrs()->getValues(), function ($total, $rcr) {
+            $total += $rcr->getNumberOfRecords();
+            return $total;
+        });
     }
 
-    public function getNumberOfRecordsCorrected() {
-        return array_reduce($this->getRcrs()->getValues(), function ($total, $rcr) { $total += $rcr->getNumberOfRecordsCorrected(); return $total; });
+    public function getNumberOfRecordsCorrected()
+    {
+        return array_reduce($this->getRcrs()->getValues(), function ($total, $rcr) {
+            $total += $rcr->getNumberOfRecordsCorrected();
+            return $total;
+        });
     }
 
-    public function getNumberOfRecordsHandled() {
-        return array_reduce($this->getRcrs()->getValues(), function ($total, $rcr) { $total += $rcr->getNumberOfRecordsHandled(); return $total; });
+    public function getNumberOfRecordsHandled()
+    {
+        return array_reduce($this->getRcrs()->getValues(), function ($total, $rcr) {
+            $total += $rcr->getNumberOfRecordsHandled();
+            return $total;
+        });
     }
 
-    public function getNumberOfRecordsReprise() {
-        return array_reduce($this->getRcrs()->getValues(), function ($total, $rcr) { $total += $rcr->getNumberOfRecordsReprise(); return $total; });
+    public function getNumberOfRecordsReprise()
+    {
+        return array_reduce($this->getRcrs()->getValues(), function ($total, $rcr) {
+            $total += $rcr->getNumberOfRecordsReprise();
+            return $total;
+        });
     }
 
     public function getSecret(): ?string
