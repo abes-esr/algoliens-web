@@ -21,24 +21,24 @@
         {% set reprise = 0 %}
         <h3>{{ year }}</h3>
         <table class="table">
-        <tr>
-            <th>Jour</th>
-            <th>Notices corrigées</th>
-            <th>Notices à reprendre document en main</th>
-            <th>Total</th>
-        </tr>
-        {% for month, monthdetail in yeardetail %}
-            {% for day, daydetail in monthdetail %}
-                {% set corrected = corrected + daydetail["1"] %}
-                {% set reprise = reprise + daydetail["2"] %}
-                <tr>
-                    <td>{{ day }}/{{ month }}</td>
-                    <td>{{ daydetail["1"] }}</td>
-                    <td>{{ daydetail["2"] }}</td>
-                    <th>{{ daydetail["1"]  + daydetail["2"] }}</th>
-                </tr>
+            <tr>
+                <th>Jour</th>
+                <th>Notices corrigées</th>
+                <th>Notices à reprendre document en main</th>
+                <th>Total</th>
+            </tr>
+            {% for month, monthdetail in yeardetail %}
+                {% for day, daydetail in monthdetail %}
+                    {% set corrected = corrected + daydetail["1"] %}
+                    {% set reprise = reprise + daydetail["2"] %}
+                    <tr>
+                        <td>{{ day }}/{{ month }}</td>
+                        <td>{{ daydetail["1"] }}</td>
+                        <td>{{ daydetail["2"] }}</td>
+                        <th>{{ daydetail["1"]  + daydetail["2"] }}</th>
+                    </tr>
+                {% endfor %}
             {% endfor %}
-        {% endfor %}
             <tr>
                 <th>Total</th>
                 <th>{{ corrected }}</th>
@@ -50,14 +50,20 @@
 
     <h1>Information sur les chargements de notices</h1>
     <ul>
-    {% for rcr in iln.rcrs %}
-        <li>{{ rcr.code }} - {{ rcr.label }}
-            <ul>
-            {% for batch in rcr.batchImports %}
-                <li>{{ batch.typeLabel }} : {{ batch.startDate.format("d-m-Y à h:i:s") }} - <a href="{{ url("export_batch_import", {'code': iln.code, 'secret': iln.secret, 'id': batch.id}) }}">export les PPN des {{ batch.countRecords }} notices</a></li>
-            {% endfor %}
-            </ul>
-        </li>
-    {% endfor %}
+        {% for rcr in iln.rcrs %}
+            <li>{{ rcr.code }} - {{ rcr.label }}
+                {% if rcr.batchImports|length == 0 %}
+                    : <i>aucun chargement</i>
+                {% else %}
+                    <ul>
+                        {% for batch in rcr.batchImports %}
+                            <li>{{ batch.typeLabel }} : {{ batch.startDate.format("d-m-Y à h:i:s") }} - <a
+                                        href="{{ url("export_batch_import", {'code': iln.code, 'secret': iln.secret, 'id': batch.id}) }}">export
+                                    les PPN des {{ batch.countRecords }} notices</a></li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </li>
+        {% endfor %}
     </ul>
 {% endblock %}
