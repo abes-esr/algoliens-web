@@ -9,6 +9,7 @@ use App\Entity\Record;
 use App\Repository\BatchImportRepository;
 use App\Repository\IlnRepository;
 use App\Service\WsHarvester;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
@@ -17,13 +18,11 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\EventDispatcher\Event;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
  * @Route("/admin")
  */
-
 class AdminController extends AbstractController
 {
     /**
@@ -57,7 +56,7 @@ class AdminController extends AbstractController
      * @Entity("iln", expr="repository.findOneBy({'code': ilnCode})")
      * @Entity("rcr", expr="repository.findOneBy({'code': rcrCode})")
      */
-    public function rcr(Iln $iln, Rcr $rcr)
+    public function rcr(Rcr $rcr)
     {
         return $this->render('admin/rcr.html.twig', [
             'rcr' => $rcr
@@ -65,23 +64,32 @@ class AdminController extends AbstractController
     }
 
     /**
-     * @Route("/iln/{ilnCode}/rcr/{rcrCode}/batch/new/{batchType}", name="admin_batch_new")
+     * @Route("/iln/{ilnCode}/rcr/{rcrCode}/batch/new/{batchType}/{batchId?}", name="admin_batch_new")
      * @Entity("rcr", expr="repository.findOneBy({'code': rcrCode})")
+     * @Entity("batchImport", expr="repository.findOneBy({'id': batchId})")
      */
-    public function batchNew(Rcr $rcr, $batchType, KernelInterface $kernel, EventDispatcherInterface $eventDispatcher, LoggerInterface $logger, EntityManagerInterface $em) {
+    public function batchNew(Rcr $rcr, $batchType, EventDispatcherInterface $eventDispatcher, LoggerInterface $logger, EntityManagerInterface $em, BatchImport $batchImport = null)
+    {
+        if (!is_null($batchImport)) {
+            $this->getDoctrine()->getRepository(Record::class)->deactivateForBatch($batchImport);
+            $batchImport->setStatus(BatchImport::STATUS_RUNNING);
+            $batchImport->setStartDate(new DateTime());
+            $batchImport->setEndDate(null);
+        } else {
+            $batchImport = new BatchImport($rcr, $batchType);
+            $batchImport->setStatus(BatchImport::STATUS_RUNNING);
+        }
 
-        $batchImport = new BatchImport($rcr, $batchType);
-        $batchImport->setStatus(BatchImport::STATUS_RUNNING);
         $em->persist($batchImport);
         $em->flush();
 
         $eventDispatcher->addListener(KernelEvents::TERMINATE, function (Event $event) use ($logger, $batchImport, $em) {
             // Launch the job
-
             $wsHarvester = new WsHarvester($em);
             $wsHarvester->runNewBatchAlreadyCreated($batchImport, $logger);
+            $em->getRepository(Rcr::class)->updateStats($batchImport->getRcr());
 
-            $logger->debug("G : ".$batchImport->getStartDate()->format("Y-m-d H:i:s"));
+            $logger->debug("G : " . $batchImport->getStartDate()->format("Y-m-d H:i:s"));
 
         });
         return $this->redirect($this->generateUrl("admin_rcr", ["ilnCode" => $rcr->getIln()->getCode(), "rcrCode" => $rcr->getCode()]));
@@ -91,7 +99,8 @@ class AdminController extends AbstractController
      * @Route("/iln/{ilnCode}/rcr/{rcrCode}/batch/{batchId}/{action}/{confirm?}", name="admin_batch_action")
      * @Entity("batchImport", expr="repository.findOneBy({'id': batchId})")
      */
-    public function batch(EntityManagerInterface $em, BatchImport $batchImport, string $action, string $confirm = null) {
+    public function batch(EntityManagerInterface $em, BatchImport $batchImport, string $action, string $confirm = null)
+    {
         if ($confirm == "confirm") {
             if ($action == "deleterecords") {
                 $this->getDoctrine()->getRepository(Record::class)->deleteForBatch($batchImport);
@@ -119,7 +128,8 @@ class AdminController extends AbstractController
      * @Route("/iln/{ilnCode}/import-rcr", name="admin_iln_populate_rcr")
      * @Entity("iln", expr="repository.findOneBy({'code': ilnCode})")
      */
-    public function ilnPopulateWithRcr(Iln $iln, EntityManagerInterface $em, Request $request) {
+    public function ilnPopulateWithRcr(Iln $iln, EntityManagerInterface $em, Request $request)
+    {
         $urlWs = "https://www.idref.fr/services/iln2rcr/" . $iln->getNumber() . "&format=text/json";
         $rcrJson = file_get_contents($urlWs);
         $rcrArray = json_decode($rcrJson);
@@ -137,7 +147,7 @@ class AdminController extends AbstractController
             }
             $rcr->setCode($library->rcr);
             $rcr->setLabel($library->shortname);
-            $rcr->setUpdated(new \DateTime());
+            $rcr->setUpdated(new DateTime());
             $rcr->setIln($iln);
             $rcr->setHarvested(0);
             $rcr->setActive(1);
@@ -147,7 +157,7 @@ class AdminController extends AbstractController
         $em->flush();
 
         $session = $request->getSession();
-        $session->getFlashBag()->add('success', $count." RCR ajoutés.");
+        $session->getFlashBag()->add('success', $count . " RCR ajoutés.");
 
         return $this->redirect($this->generateUrl("admin"));
     }
@@ -155,21 +165,31 @@ class AdminController extends AbstractController
     /**
      * @Route("/fix-reprises", name="admin_fix_reprises")
      */
-    public function fixReprises(EntityManagerInterface $em, Request $request) {
-        $reprisesForIln = $em->getRepository(Record::class)->countRepriseForRcrs();
-
+    public function fixReprises(EntityManagerInterface $em, Request $request)
+    {
+        $rcrs = $em->getRepository(Rcr::class)->findAll();
         $count = 0;
-        foreach ($reprisesForIln as $reprise) {
-            /** @var Rcr $reprise ["rcr"] */
-            if ($reprise["rcr"]->getNumberOfRecordsReprise() != $reprise["count"]) {
-                $reprise["rcr"]->setNumberOfRecordsReprise($reprise["count"]);
+        /** @var Rcr $rcr */
+        foreach ($rcrs as $rcr) {
+            $updated = $em->getRepository(Rcr::class)->updateStats($rcr);
+            if ($updated != 0) {
                 $count++;
-                $em->persist($reprise["rcr"]);
             }
         }
+
+//        $reprisesForIln = $em->getRepository(Record::class)->countRepriseForRcrs();
+//        $count = 0;
+//        foreach ($reprisesForIln as $reprise) {
+//            /** @var Rcr $reprise ["rcr"] */
+//            if ($reprise["rcr"]->getNumberOfRecordsReprise() != $reprise["count"]) {
+//                $reprise["rcr"]->setNumberOfRecordsReprise($reprise["count"]);
+//                $count++;
+//                $em->persist($reprise["rcr"]);
+//            }
+//        }
         $em->flush();
         $session = $request->getSession();
-        $session->getFlashBag()->add('success', $count." RCR corrigé(s).");
+        $session->getFlashBag()->add('success', $count . " RCR corrigé(s).");
 
         return $this->redirect(
             $this->generateUrl("admin")

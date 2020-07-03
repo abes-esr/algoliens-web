@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -74,6 +75,11 @@ class Rcr
      */
     private $batchImports;
 
+    /**
+     * @ORM\Column(type="integer", nullable=true, options={"default": 0})
+     */
+    private $numberOfRecordsFixedOutside;
+
     public function __construct()
     {
         $this->records = new ArrayCollection();
@@ -114,12 +120,12 @@ class Rcr
         return $this;
     }
 
-    public function getUpdated(): ?\DateTimeInterface
+    public function getUpdated(): ?DateTimeInterface
     {
         return $this->updated;
     }
 
-    public function setUpdated(\DateTimeInterface $updated): self
+    public function setUpdated(DateTimeInterface $updated): self
     {
         $this->updated = $updated;
 
@@ -285,6 +291,18 @@ class Rcr
                 $batchImport->setRcr(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getNumberOfRecordsFixedOutside(): ?int
+    {
+        return $this->numberOfRecordsFixedOutside;
+    }
+
+    public function setNumberOfRecordsFixedOutside(int $numberOfRecordsFixedOutside): self
+    {
+        $this->numberOfRecordsFixedOutside = $numberOfRecordsFixedOutside;
 
         return $this;
     }

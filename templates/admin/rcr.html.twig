@@ -3,35 +3,39 @@
 {% block title %}Hello AdminController!{% endblock %}
 
 {% block body %}
-<div class="example-wrapper">
-    {% include "admin/_breadcrumb.html.twig" %}
-    <h1>Admin- RCR {{ rcr.code }} - {{ rcr.label }}</h1>
+    <div class="example-wrapper">
+        {% include "admin/_breadcrumb.html.twig" %}
+        <h1>Admin- RCR {{ rcr.code }} - {{ rcr.label }}</h1>
 
-    <h2>Statistiques</h2>
-    <p><span class="badge badge-success btn-lg">{{ rcr.numberOfRecords }}</span> notices dans la base</p>
-    <p><span class="badge badge-success btn-lg">{{ rcr.numberOfRecordsCorrected }}</span> notices corrigées</p>
-    <p><span class="badge badge-success btn-lg">{{ rcr.numberOfRecordsReprise }}</span> notices à reprendre document en main</p>
+        <h2>Statistiques</h2>
+        <p><span class="badge badge-success btn-lg">{{ rcr.numberOfRecords }}</span> notices dans la base</p>
+        <p><span class="badge badge-success btn-lg">{{ rcr.numberOfRecordsCorrected }}</span> notices corrigées</p>
+        <p><span class="badge badge-success btn-lg">{{ rcr.numberOfRecordsReprise }}</span> notices à reprendre document
+            en main</p>
 
-    {% set batchCodeCrea = constant('App\\Entity\\BatchImport::TYPE_RCR_CREA') %}
-    {% set batchCodeUnica = constant('App\\Entity\\BatchImport::TYPE_UNICA') %}
+        {% set batchCodeCrea = constant('App\\Entity\\BatchImport::TYPE_RCR_CREA') %}
+        {% set batchCodeUnica = constant('App\\Entity\\BatchImport::TYPE_UNICA') %}
 
-    {% for batchType in [batchCodeCrea, batchCodeUnica] %}
-        {% set batch =  rcr.hasBatchRun(batchType) %}
+        {% for batchType in [batchCodeCrea, batchCodeUnica] %}
+            {% set batch =  rcr.hasBatchRun(batchType) %}
 
-        {% if batchType == batchCodeCrea %}
-            <h2>Batch RCR Créateur</h2>
-        {% elseif batchType == batchCodeUnica %}
-            <h2>Batch UNICA</h2>
-        {% endif %}
+            {% if batchType == batchCodeCrea %}
+                <h2>Batch RCR Créateur</h2>
+            {% elseif batchType == batchCodeUnica %}
+                <h2>Batch UNICA</h2>
+            {% endif %}
 
-        {% if not batch %}
-            <p>Jamais joué : <a href="{{ url("admin_batch_new", {ilnCode: rcr.iln.code, rcrCode: rcr.code, batchType: batchType})}}">Jouer maintenant</a></p>
-        {% else %}
-            <table class="table">
-            {% include "admin/_batch_header.html.twig" %}
-            {% include "admin/_batch.html.twig" with {'batch': batch}%}
-            </table>
-        {% endif %}
-    {% endfor %}
-</div>
+            {% if not batch %}
+                <p>Jamais joué : <a
+                            href="{{ url("admin_batch_new", {ilnCode: rcr.iln.code, rcrCode: rcr.code, batchType: batchType}) }}">Jouer
+                        maintenant</a></p>
+            {% else %}
+                <table class="table">
+                    {% include "admin/_batch_header.html.twig" %}
+                    {% include "admin/_batch.html.twig" with {'batch': batch} %}
+                </table>
+                {% include "admin/_batch_stats.html.twig"  with {'batch': batch} %}
+            {% endif %}
+        {% endfor %}
+    </div>
 {% endblock %}

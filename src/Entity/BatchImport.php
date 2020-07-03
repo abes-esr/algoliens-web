@@ -2,11 +2,11 @@
 
 namespace App\Entity;
 
+use DateTime;
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\HttpClient\HttpClient;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\BatchImportRepository")
@@ -20,8 +20,6 @@ class BatchImport
     const STATUS_FINISHED = 2;
     const STATUS_ERROR = 3;
     const STATUS_CANCEL = 4;
-
-    private $em = null;
 
     /**
      * @ORM\Id()
@@ -76,12 +74,12 @@ class BatchImport
      */
     private $url;
 
-    public function __construct(Rcr $rcr = null, int $type = null, EntityManagerInterface $em = null)
+    public function __construct(Rcr $rcr = null, int $type = null)
     {
         $this->records = new ArrayCollection();
         $this->setRcr($rcr);
         $this->setType($type);
-        $this->setStartDate(new \DateTime());
+        $this->setStartDate(new DateTime());
         $this->setCountRecords(0);
         $this->setCountErrors(0);
     }
@@ -116,6 +114,7 @@ class BatchImport
             case self::TYPE_UNICA:
                 return "UNICA";
         }
+        return "";
     }
 
     public function setType(int $type): self
@@ -156,6 +155,42 @@ class BatchImport
         return $this;
     }
 
+    public function getRecordsByStatus() {
+        $stats = [];
+        foreach ($this->getRecords() as $record) {
+            if (!isset($stats[$record->getStatus()])) {
+                $stats[$record->getStatus()] = 1;
+            } else {
+                $stats[$record->getStatus()] += 1;
+            }
+        }
+
+        $output = [];
+        foreach ($stats as $status => $count) {
+            $statusLabel = null;
+            switch ($status) {
+                case Record::RECORD_TODO:
+                    $statusLabel = "Notices à corriger";
+                    break;
+                case Record::RECORD_VALIDATED:
+                    $statusLabel = "Notices corrigées";
+                    break;
+
+                case Record::RECORD_SKIPPED:
+                    $statusLabel = "Notices laissées de côté";
+                    break;
+
+                case Record::RECORD_FIXED_OUTSIDE:
+                    $statusLabel = "Notices corrigées hors algoliens";
+                    break;
+            }
+
+            $output[$status] = ["label" => $statusLabel, "count" => $count];
+        }
+
+        return $output;
+    }
+
     public function getCountRecords(): ?int
     {
         return $this->countRecords;
@@ -180,6 +215,16 @@ class BatchImport
         return $this;
     }
 
+    public function updateCountErrors()
+    {
+        /** @var Record $record */
+        $count = 0;
+        foreach ($this->getRecords() as $record) {
+            $count += sizeof($record->getLinkErrors());
+        }
+        $this->setCountErrors($count);
+    }
+
     public function getDurationAsString(): string
     {
         return $this->getDuration()->format("%Imin %ss");
@@ -195,7 +240,7 @@ class BatchImport
         if (is_null($this->getStartDate())) {
             return null;
         }
-        return $this->getStartDate()->diff(new \DateTime())->format("%Imin %ss");
+        return $this->getStartDate()->diff(new DateTime())->format("%Imin %ss");
     }
 
     public function getIlnCode(): string
@@ -235,6 +280,7 @@ class BatchImport
             case BatchImport::STATUS_RUNNING:
                 return "warning";
         }
+        return "";
     }
 
     public function setStatus(int $status): self
@@ -244,24 +290,24 @@ class BatchImport
         return $this;
     }
 
-    public function getEndDate(): ?\DateTimeInterface
+    public function getEndDate(): ?DateTimeInterface
     {
         return $this->endDate;
     }
 
-    public function setEndDate(?\DateTimeInterface $endDate): self
+    public function setEndDate(?DateTimeInterface $endDate): self
     {
         $this->endDate = $endDate;
 
         return $this;
     }
 
-    public function getStartDate(): ?\DateTimeInterface
+    public function getStartDate(): ?DateTimeInterface
     {
         return $this->startDate;
     }
 
-    public function setStartDate(?\DateTimeInterface $startDate): self
+    public function setStartDate(?DateTimeInterface $startDate): self
     {
         $this->startDate = $startDate;
 
