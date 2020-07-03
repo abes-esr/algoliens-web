@@ -59,6 +59,8 @@ class WsHarvester
 
                 $record->setWinnie(0);
                 $this->em->persist($record);
+
+                $this->batchImport->addRecord($record);
             } elseif ($record->getBatchImport()->getType() != $this->batchImport->getType()) {
                 // On a déjà récupéré cette notice lors d'un autre import, plus besoin de la traiter
                 return;
@@ -84,7 +86,6 @@ class WsHarvester
 
             $existingRecords[$ppn] = $record;
 
-            $this->batchImport->updateCountErrors();
             $errorObject = new LinkError();
             $errorObject->setErrorText($error[3]);
             $errorObject->setErrorCode($error[5]);
@@ -185,6 +186,9 @@ class WsHarvester
 
         $this->em->getRepository(Rcr::class)->updateStats($this->batchImport->getRcr());
         $this->em->persist($this->batchImport->getRcr());
+
+        $this->batchImport->updateCountErrors();
+        $this->em->persist($this->batchImport);
 
         $this->em->flush();
         return $this->batchImport;
