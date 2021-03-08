@@ -2,9 +2,11 @@
   "type": "project",
   "license": "proprietary",
   "require": {
-    "php": "^7.3.27",
+    "php": "^7.4",
     "ext-ctype": "*",
     "ext-iconv": "*",
+    "ext-json": "*",
+    "ext-simplexml": "*",
     "phpoffice/phpspreadsheet": "^1.12",
     "sensio/framework-extra-bundle": "^5.5",
     "symfony/console": "5.0.*",
@@ -21,11 +23,9 @@
     "symfony/security-csrf": "5.0.*",
     "symfony/twig-bundle": "5.0.*",
     "symfony/validator": "5.0.*",
-    "symfony/webpack-encore-bundle": "^1.7",
+    "symfony/webpack-encore-bundle": "^1.11",
     "symfony/yaml": "5.0.*",
-    "twig/twig": "^3.0",
-    "ext-json": "*",
-    "ext-simplexml": "*"
+    "twig/twig": "^3.0"
   },
   "require-dev": {
     "symfony/debug-pack": "^1.0",
@@ -38,7 +38,7 @@
     },
     "sort-packages": true,
     "platform": {
-      "php": "7.3.27"
+      "php": "7.4.15"
     }
   },
   "autoload": {
