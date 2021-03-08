@@ -2,7 +2,7 @@
   "type": "project",
   "license": "proprietary",
   "require": {
-    "php": "^7.2.5",
+    "php": "^7.3.27",
     "ext-ctype": "*",
     "ext-iconv": "*",
     "phpoffice/phpspreadsheet": "^1.12",
@@ -38,7 +38,7 @@
     },
     "sort-packages": true,
     "platform": {
-      "php": "7.2.31"
+      "php": "7.3.27"
     }
   },
   "autoload": {
