@@ -6,7 +6,7 @@ use App\Entity\Iln;
 use App\Entity\Rcr;
 use App\Entity\Record;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Common\Persistence\ManagerRegistry;
+use Doctrine\Persistence\ManagerRegistry;
 
 /**
  * @method Rcr|null find($id, $lockMode = null, $lockVersion = null)

@@ -5,7 +5,7 @@ namespace App\Repository;
 use App\Entity\Iln;
 use App\Entity\Rcr;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Common\Persistence\ManagerRegistry;
+use Doctrine\Persistence\ManagerRegistry;
 
 /**
  * @method Iln|null find($id, $lockMode = null, $lockVersion = null)
