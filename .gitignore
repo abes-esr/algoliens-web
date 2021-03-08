@@ -17,5 +17,6 @@ yarn-error.log
 ###< symfony/webpack-encore-bundle ###
 
 .idea/
+composer.phar
 ws_files/
 public/batches/
