@@ -7,6 +7,7 @@
     "ext-iconv": "*",
     "ext-json": "*",
     "ext-simplexml": "*",
+    "box/spout": "^3.2",
     "phpoffice/phpspreadsheet": "^1.12",
     "sensio/framework-extra-bundle": "^5.5",
     "symfony/console": "5.2.*",

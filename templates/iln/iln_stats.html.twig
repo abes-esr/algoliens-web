@@ -24,35 +24,57 @@
             <li>{{ rcr.label }} : {{ rcr.getNumberOfRecordsFixedOutside }}</li>
         {% endfor %}
     </ul>
-    <h1>Historique</h1>
+    <h1>Historique (Exporter au format <a
+                href="{{ url("export_iln_stats", {"code": iln.code, "secret": iln.secret, "format": "xlsx"}) }}">xlsx</a>,
+        <a href="{{ url("export_iln_stats", {"code": iln.code, "secret": iln.secret, "format": "ods"}) }}">ods</a>, <a
+                href="{{ url("export_iln_stats", {"code": iln.code, "secret": iln.secret, "format": "csv"}) }}">csv</a>)
+    </h1>
     {% for year, yeardetail in stats %}
-        {% set corrected = 0 %}
-        {% set reprise = 0 %}
+        {% set correctedrecords = 0 %}
+        {% set correctederrors= 0 %}
+        {% set repriserecords = 0 %}
+        {% set repriseerrors = 0 %}
         <h3>{{ year }}</h3>
         <table class="table">
             <tr>
-                <th>Jour</th>
-                <th>Notices corrigées</th>
-                <th>Notices à reprendre document en main</th>
-                <th>Total</th>
+                <th rowspan="2">Jour</th>
+                <th colspan="2">Corrections</th>
+                <th colspan="2">Notices à reprendre document en main</th>
+                <th colspan="2">Total</th>
             </tr>
+            <tr>
+                <th>Notices</th>
+                <th>Liens</th>
+                <th>Notices</th>
+                <th>Liens</th>
+                <th>Notices</th>
+                <th>Liens</th>
+            </tr>
+
             {% for month, monthdetail in yeardetail %}
                 {% for day, daydetail in monthdetail %}
-                    {% set corrected = corrected + daydetail["1"] %}
-                    {% set reprise = reprise + daydetail["2"] %}
+                    {% set correctedrecords = correctedrecords + daydetail["1"]["nbrecords"] %}
+                    {% set correctederrors = correctederrors + daydetail["1"]["nberrors"] %}
+                    {% set repriserecords = repriserecords + daydetail["2"]["nbrecords"] %}
+                    {% set repriseerrors = repriseerrors + daydetail["2"]["nberrors"] %}
                     <tr>
                         <td>{{ day }}/{{ month }}</td>
-                        <td>{{ daydetail["1"] }}</td>
-                        <td>{{ daydetail["2"] }}</td>
-                        <th>{{ daydetail["1"]  + daydetail["2"] }}</th>
+                        <td>{{ daydetail["1"]["nbrecords"] }}</td>
+                        <td>{{ daydetail["1"]["nberrors"] }}</td>
+                        <td>{{ daydetail["2"]["nbrecords"] }}</td>
+                        <td>{{ daydetail["2"]["nberrors"] }}</td>
+                        <th>{{ daydetail["1"]["nbrecords"]  + daydetail["2"]["nbrecords"] }}</th>
+                        <th>{{ daydetail["1"]["nberrors"]  + daydetail["2"]["nberrors"] }}</th>
                     </tr>
                 {% endfor %}
             {% endfor %}
             <tr>
                 <th>Total</th>
-                <th>{{ corrected }}</th>
-                <th>{{ reprise }}</th>
-                <th>{{ corrected + reprise }}</th>
+                <th>{{ correctedrecords }}</th>
+                <th>{{ correctederrors }}</th>
+                <th>{{ repriserecords }}</th>
+                <th>{{ repriseerrors }}</th>
+                <th>{{ correctedrecords + repriserecords }}</th>
             </tr>
         </table>
     {% endfor %}
