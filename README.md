@@ -85,9 +85,21 @@ Une fois les RCR créés, si l'on choisit d'accéder au dashboard d'administrati
 Lorsque l'on choisit "Voir le détail" sur un des RCR. Il est alors possible de lancer la récupération des notices depuis le webservice Algoliens. Deux types de récupérations sont proposées pour le moment : 
 
 - **RCR Créateur** : toutes les notices pour lesquelles le RCR concerné est créateur. Ce premier appel est relativement rapide;
-- **UNICA** : notices Unica, indépendamment de la création de la notice par le RCR ou non. Ce second appel est assez lent et peut parfois être amené à ne pas répondre. Si tel est le cas il est aussi possible de charger directement des fichiers via la ligne de commande par ```php bin/console app:harvest-records```. Cette méthode reste à documenter et améliorer;
+- **UNICA** : notices Unica, indépendamment de la création de la notice par le RCR ou non. Ce second appel est assez lent et peut parfois être amené à ne pas répondre. Si tel est le cas il est aussi possible de charger directement des fichiers via la ligne de commande (cf. $ Chargement par fichier ci-dessous);
 
 Dès que des notices ont commencé à être chargées il est possible de commencer à utiliser l'interface publique.
+
+## Chargement par fichier
+La récupération des fichiers Unica peut parfois être assez longue, conduisant à un timeout du serveur. Pour éviter cela ou permettre de charger tout un ILN par la ligne de commande, il est possible d'utiliser la fonction ```php bin/console app:harvest-records```.
+
+Cette fonction prend plusieurs arguments potentiels :
+- --clean-database : permet de vider la base de données avant de lancer l'import. Pour le moment cette fonction vide toute la base de données pour l'ensemble des ILN si plusieurs sont chargés, attention;
+- --iln : permet d'indiquer le numéro d'ILN sur lequel on souhaite travailler
+- --rcr-from-file : permet d'indiquer un RCR spécifique
+
+Il existe deux manières principales d'utiliser ce script :
+- ```php bin/console app:harvest-records --iln XXX``` : va lancer un script en ligne de commande qui va parcourir tous les RCR de l'ILN XXX et aller interroger le webservice pour récupérer les contenus et les charger dans la base;
+- ```php bin/console app:harvest-records --rcr-from-file YYY``` : cette option nécessite d'avoir téléchargé en amont le fichier depuis le Webservice (avec un lien du type https://www.idref.fr/AlgoLiens?localisationRcr=335222103&unica=localisationRcr&paprika=1&rownum=15) et l'avoir déposé dans le dossier ws_files. Le script va alors poser quelques questions interactives avant d'aller charger les notices.
 
 ## Gestion de raisons pour le non traitement (optionnel)
 Par défaut il existe deux options : Notice traitée ou Notice à reprendre plus tard. Si l'on souhaite préciser la raison qui pousse à repousser le traitement d'un document (gestion de chantiers divers par exemple), il est possible de créer des entrées dans la table ```skip_reason```. 

@@ -167,7 +167,7 @@ class WsHarvester
         return $content;
     }
 
-    public function runNewBatchAlreadyCreated(BatchImport $batchImport, $logger)
+    public function runNewBatchAlreadyCreated(BatchImport $batchImport, $logger, $content = null)
     {
         $this->logger = $logger;
         $this->batchImport = $batchImport;
@@ -177,7 +177,9 @@ class WsHarvester
         $this->em->persist($this->batchImport);
         $this->em->flush();
 
-        $content = $this->getApiContent();
+        if (is_null($content)) {
+            $content = $this->getApiContent();
+        }
         $this->processContent($content);
         $this->batchImport->setEndDate(new DateTime());
         $this->batchImport->setStatus(BatchImport::STATUS_FINISHED);
@@ -194,10 +196,11 @@ class WsHarvester
         return $this->batchImport;
     }
 
-    public function runNewBatch(Rcr $rcr, int $batchType)
+    public function runNewBatch(Rcr $rcr, int $batchType, string $content = null)
     {
         $batchImport = new BatchImport($rcr, $batchType);
-        return $this->runNewBatchAlreadyCreated($batchImport, null);
+        $batchImport->setType($batchType);
+        return $this->runNewBatchAlreadyCreated($batchImport, null, $content);
     }
 
     public function populateRecordFromAbes(Record $inputRecord)

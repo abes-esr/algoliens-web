@@ -227,7 +227,7 @@ class BatchImport
 
     public function getDurationAsString(): string
     {
-        return $this->getDuration()->format("%Imin %ss");
+        return $this->getDuration()->format("%Imin %ss %F");
     }
 
     public function getDuration()
