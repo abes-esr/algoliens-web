@@ -114,6 +114,7 @@ class WsHarvester
 
     private function processContent($content)
     {
+
         $lines = preg_split("/\n/", $content);
         $lines = array_slice($lines, 3);
 
@@ -128,8 +129,15 @@ class WsHarvester
                 $existingRecords[$record->getPpn()] = $record;
             }
         }
+
+        $count = 0;
         foreach ($lines as $line) {
             $this->processLine($existingRecords, $ppnPaprikaAlreadySet, $line);
+            $count++;
+            if (!($count % 500)) {
+                $this->em->flush();
+                print "$count / memory : ".memory_get_usage()."\n";
+            }
         }
         $this->em->persist($this->batchImport->getRcr());
     }
@@ -169,6 +177,7 @@ class WsHarvester
 
     public function runNewBatchAlreadyCreated(BatchImport $batchImport, $logger, $content = null)
     {
+        $batchImportId = $batchImport->getId();
         $this->logger = $logger;
         $this->batchImport = $batchImport;
 
@@ -188,12 +197,13 @@ class WsHarvester
 
         $this->em->getRepository(Rcr::class)->updateStats($this->batchImport->getRcr());
         $this->em->persist($this->batchImport->getRcr());
-
         $this->batchImport->updateCountErrors();
         $this->em->persist($this->batchImport);
-
         $this->em->flush();
+
+        $this->batchImport = $this->em->getRepository(BatchImport::class)->find($batchImportId);
         return $this->batchImport;
+
     }
 
     public function runNewBatch(Rcr $rcr, int $batchType, string $content = null)

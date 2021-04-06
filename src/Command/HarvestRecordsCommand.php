@@ -5,8 +5,11 @@ namespace App\Command;
 use App\Entity\BatchImport;
 use App\Entity\Iln;
 use App\Entity\Rcr;
+use App\Entity\Record;
 use App\Service\WsHarvester;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Helper;
 use Symfony\Component\Console\Input\InputInterface;
@@ -27,12 +30,16 @@ class HarvestRecordsCommand extends Command
     private $em;
     private $io;
     private $wsHarvester;
+    private $input;
+    private $output;
+    private $logger;
 
-    public function __construct(string $name = null, EntityManagerInterface $em, WsHarvester $wsHarvester)
+    public function __construct(string $name = null, EntityManagerInterface $em, WsHarvester $wsHarvester, LoggerInterface $logger)
     {
         parent::__construct($name);
         $this->em = $em;
         $this->wsHarvester = $wsHarvester;
+        $this->logger = $logger;
     }
 
     protected function configure()
@@ -41,32 +48,36 @@ class HarvestRecordsCommand extends Command
             ->setDescription('download all records')
             ->addOption('iln', null, InputOption::VALUE_REQUIRED, "Code de l'ILN")
             ->addOption('clean-database', null, InputOption::VALUE_NONE, "Nettoyage de la base de données avant import")
-            ->addOption('rcr-from-file', null, InputOption::VALUE_REQUIRED, "Le code d'un RCR que l'on souhaite charger depuis un fichier");
+            ->addOption('rcr-from-file', null, InputOption::VALUE_REQUIRED, "Le code d'un RCR que l'on souhaite charger depuis un fichier")
+            ->addOption('refresh', null, InputOption::VALUE_NONE, "Refresh des batchs déjà récupérés");;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->io = new SymfonyStyle($input, $output);
+        $this->input = $input;
+        $this->output = $output;
 
-        $cleandb = $input->getOption('clean-database');
+        $this->io = new SymfonyStyle($this->input, $this->output);
+
+        $cleandb = $this->input->getOption('clean-database');
         $helper = $this->getHelper('question');
 
         if ($cleandb) {
             $question = new ConfirmationQuestion("Êtes-vous sûr·e de vouloir vider la base de données avant import ?\n", false);
 
-            if (!$helper->ask($input, $output, $question)) {
+            if (!$helper->ask($this->input, $this->output, $question)) {
                 $this->io->error("Fin de traitement en l'absence de validation");
                 exit;
             }
             $this->emptyDatabase();
         }
 
-        $rcrFromFile = $input->getOption('rcr-from-file');
+        $rcrFromFile = $this->input->getOption('rcr-from-file');
         if ($rcrFromFile) {
             /** @var Rcr $rcr */
             $rcr = $this->em->getRepository(Rcr::class)->findOneBy(["code" => $rcrFromFile]);
             $this->io->title("Chargement spécifique pour " . $rcr->getLabel() . " (" . $rcr->getCode() . ")");
-            $filename = $this->getWsFilename($helper, $input, $output);
+            $filename = $this->getWsFilename($helper);
             $content = file_get_contents($filename);
 
             $batchTypeQuestion = new ChoiceQuestion("Quel est le type de cet import ?",
@@ -75,7 +86,7 @@ class HarvestRecordsCommand extends Command
                     "UNICA",
                 ]);
 
-            $batchTypeLabel = $helper->ask($input, $output, $batchTypeQuestion);
+            $batchTypeLabel = $helper->ask($this->input, $this->output, $batchTypeQuestion);
             $batchTypeValue = null;
             switch ($batchTypeLabel) {
                 case "RCR Créateur":
@@ -89,7 +100,7 @@ class HarvestRecordsCommand extends Command
             }
             $this->wsHarvester->runNewBatch($rcr, $batchTypeValue, $content);
         } else {
-            $ilnNumber = $input->getOption('iln');
+            $ilnNumber = $this->input->getOption('iln');
             if (!$ilnNumber) {
                 $this->io->error("Manque le code de l'ILN en argument");
                 exit;
@@ -102,7 +113,13 @@ class HarvestRecordsCommand extends Command
             }
 
             $rcrs = $iln->getRcrs();
+            $rcrsId = [];
             foreach ($rcrs as $rcr) {
+                $rcrsId[] = $rcr->getId();
+            }
+            foreach ($rcrsId as $rcrId) {
+                /** @var Rcr $rcr */
+                $rcr = $this->em->getRepository(Rcr::class)->find($rcrId);
                 $this->io->title("Traitement RCR : " . $rcr->getCode() . " - " . $rcr->getLabel());
                 $this->runBatches($rcr);
             }
@@ -125,7 +142,7 @@ class HarvestRecordsCommand extends Command
         $this->em->getConnection()->exec("SET FOREIGN_KEY_CHECKS = 1;");
     }
 
-    private function getWsFilename(Helper $helper, InputInterface $input, OutputInterface $output)
+    private function getWsFilename(Helper $helper)
     {
         $finder = new Finder();
         $directory_files = "ws_files";
@@ -141,7 +158,7 @@ class HarvestRecordsCommand extends Command
         );
         $question->setErrorMessage('Fichier invalide.');
 
-        $filename = $helper->ask($input, $output, $question);
+        $filename = $helper->ask($this->input, $this->output, $question);
         return $filename;
     }
 
@@ -150,6 +167,7 @@ class HarvestRecordsCommand extends Command
         $this->runBatch($rcr, BatchImport::TYPE_RCR_CREA);
         $this->runBatch($rcr, BatchImport::TYPE_UNICA);
         $this->em->getRepository(Rcr::class)->updateStats($rcr);
+        $this->em->clear();
     }
 
     private function runBatch(Rcr $rcr, int $batchType)
@@ -160,11 +178,30 @@ class HarvestRecordsCommand extends Command
             $this->io->writeln("Récupération RCR CREATEUR");
         }
 
-        if ($rcr->hasBatchRun($batchType)) {
-            $this->io->writeln("<error>Déjà joué</error>");
+        $batch = $rcr->hasBatchRun($batchType);
+        if ($batch) {
+            if ($this->input->getOption("refresh")) {
+                $this->io->writeln("BEFOR : ".$batch->getCountRecords()." records / ".$batch->getCountErrors()." errors");
+                $this->em->getRepository(Record::class)->deactivateForBatch($batch);
+                $batch->setStatus(BatchImport::STATUS_RUNNING);
+                $batch->setStartDate(new DateTime());
+                $batch->setEndDate(null);
+
+                $this->wsHarvester->runNewBatchAlreadyCreated($batch, $this->logger);
+                $this->em->getRepository(Rcr::class)->updateStats($batch->getRcr());
+
+                $batch = $rcr->hasBatchRun($batchType);
+                $this->io->writeln("AFTER : ".$batch->getCountRecords()." records / ".$batch->getCountErrors()." errors");
+            } else {
+                $this->io->writeln("<error>Déjà joué (ajouter le paramètre --refresh pour mettre à jour</error>");
+            }
         } else {
-            $batchImport = $this->wsHarvester->runNewBatch($rcr, $batchType);
-            $this->displayBatchResult($batchImport);
+            if (!$this->input->getOption("refresh")) {
+                $batchImport = $this->wsHarvester->runNewBatch($rcr, $batchType);
+                $this->displayBatchResult($batchImport);
+            } else {
+                $this->io->writeln("On est en refresh, ce batch n'a jamais tourné, on le passe pour le moment");
+            }
         }
     }
 
