@@ -1,5 +1,6 @@
 <h3>Détails</h3>
 <ul>
+    <li>URL : <a href="{{ batch.url }}">{{ batch.url }}</a></li>
     {% for statusCode, stats in batch.recordsByStatus %}
         <li>
             {{ stats.label }} : {{ stats.count }}
