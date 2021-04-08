@@ -40,6 +40,9 @@ class HarvestRecordsCommand extends Command
         $this->em = $em;
         $this->wsHarvester = $wsHarvester;
         $this->logger = $logger;
+
+        ini_set("default_socket_timeout", 3600);
+
     }
 
     protected function configure()
@@ -181,6 +184,7 @@ class HarvestRecordsCommand extends Command
         $batch = $rcr->hasBatchRun($batchType);
         if ($batch) {
             if ($this->input->getOption("refresh")) {
+                $start = microtime(true);
                 $this->io->writeln("BEFOR : ".$batch->getCountRecords()." records / ".$batch->getCountErrors()." errors");
                 $this->em->getRepository(Record::class)->deactivateForBatch($batch);
                 $batch->setStatus(BatchImport::STATUS_RUNNING);
@@ -191,7 +195,10 @@ class HarvestRecordsCommand extends Command
                 $this->em->getRepository(Rcr::class)->updateStats($batch->getRcr());
 
                 $batch = $rcr->hasBatchRun($batchType);
-                $this->io->writeln("AFTER : ".$batch->getCountRecords()." records / ".$batch->getCountErrors()." errors");
+                $end = microtime(true);
+
+                $this->io->writeln("AFTER : ".$batch->getCountRecords()." records / ".$batch->getCountErrors()." errors [".($end-$start)." s]");
+
             } else {
                 $this->io->writeln("<error>Déjà joué (ajouter le paramètre --refresh pour mettre à jour</error>");
             }
