@@ -158,17 +158,18 @@ class WsHarvester
             // Si on arrive à 0, on abandonne
             return null;
         }
-        $url = $this->getUrl() . "&rownum=" . $rownum;
+        $url = $this->getUrl();
         $client = HttpClient::create();
         try {
             $currentUrl = $url . "&rownum=" . $rownum;
-
+            print "Appel : ".$currentUrl."\n";
             $this->batchImport->setUrl($currentUrl);
             $response = $client->request('GET', $currentUrl, [
                 'max_duration' => 0
             ]);
             $content = $response->getContent();
         } catch (Exception $e) {
+            print "Erreur à $rownum, on divise par deux\n";
             return $this->getApiContent(intval($rownum / 2));
         }
         $this->storeContent($content);
@@ -180,7 +181,6 @@ class WsHarvester
         $batchImportId = $batchImport->getId();
         $this->logger = $logger;
         $this->batchImport = $batchImport;
-
         $this->batchImport->setStartDate(new DateTime());
         $this->batchImport->setStatus(BatchImport::STATUS_RUNNING);
         $this->em->persist($this->batchImport);
