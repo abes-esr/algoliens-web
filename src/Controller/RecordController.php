@@ -8,7 +8,6 @@ use App\Entity\Iln;
 use App\Entity\Rcr;
 use App\Entity\Record;
 use App\Form\RecordType;
-use App\Repository\RecordRepository;
 use App\Service\AbesLanguages;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -16,8 +15,6 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 class RecordController extends AbstractController
@@ -36,7 +33,6 @@ class RecordController extends AbstractController
             $rcr = $request->attributes->get("rcr");
         } else {
             dd($request);
-            exit;
         }
 
         if ($request->getMethod() == "GET") {
@@ -50,7 +46,6 @@ class RecordController extends AbstractController
             if ($route == "view_record_lang") {
                 $i = 1;
             } else {
-
                 $record->setRcrCreate($rcr);
             }
         }
@@ -72,24 +67,21 @@ class RecordController extends AbstractController
                     $record->setStatus(1);
                     $session = $request->getSession();
                     $session->getFlashBag()->add('success', "Correction de la notice n°" . $record->getPpn() . " enregistrée, elle ne sera plus proposée par cette interface.");
-                    // On ajoute 1 pour tenir compte de la notice en cours
-                    $countCorrected = 1 + $em->getRepository(Record::class)->countCorrectedForRcr($record->getRcrCreate());
-                    $record->getRcrCreate()->setNumberOfRecordsCorrected($countCorrected);
                 } elseif ($submitButton->getName() == "skip") {
                     $skipReason = $recordForm->getSkipReason();
                     $record->setStatus(Record::RECORD_SKIPPED);
                     $record->setComment($recordForm->getComment());
                     $record->setSkipReason($skipReason);
                     // On ajoute 1 pour tenir compte de la notice en cours
-                    $countReprise = 1 + $em->getRepository(Record::class)->countRepriseForRcr($record->getRcrCreate());
-                    $record->getRcrCreate()->setNumberOfRecordsReprise($countReprise);
 
                     $session = $request->getSession();
                     $session->getFlashBag()->add('success', "Cette notice ne sera plus proposée. Elle sera listée dans celles à reprendre document en main.");
                 }
-
                 $em->persist($record);
                 $em->flush();
+
+                // On met à jour les stats du RCR
+                $em->getRepository(Rcr::class)->updateStatsForRcr($record->getRcrCreate());
 
                 return true;
             } else {
@@ -174,8 +166,6 @@ class RecordController extends AbstractController
             return $this->render($responseTemplate,
                 $responseParams
             );
-        } else {
-
         }
 
         return $this->viewRecord($record, $iln, $em, $request, $redirectResponse, $responseTemplate, $responseParams);
@@ -206,10 +196,7 @@ class RecordController extends AbstractController
             return $this->render($responseTemplate,
                 $responseParams
             );
-        } else {
-
         }
-
         return $this->viewRecord($record, $iln, $em, $request, $redirectResponse, $responseTemplate, $responseParams);
     }
 }

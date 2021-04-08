@@ -48,8 +48,14 @@ class RcrRepository extends ServiceEntityRepository
             ->getQuery();
         $count = $q->execute();
         return $count;
-
     }
+
+    public function updateStatsForRcr(Rcr $rcr) {
+        foreach ([Record::RECORD_TODO, Record::RECORD_VALIDATED, Record::RECORD_SKIPPED, Record::RECORD_FIXED_OUTSIDE] as $status) {
+            $this->getEntityManager()->getConnection()->executeQuery("UPDATE `rcr` set records_status".$status." = (select count(*) from record where record.rcr_create_id = rcr.id and status = ".$status.") where rcr.id = ?", [$rcr->getId()]);
+        }
+    }
+
     // /**
     //  * @return Rcr[] Returns an array of Rcr objects
     //  */

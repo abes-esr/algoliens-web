@@ -103,17 +103,6 @@ class Iln
     /**
      * @return Collection|Rcr[]
      */
-    public function getRcrs(): Collection
-    {
-        $output = $this->rcrs->filter(function ($rcr) {
-            return $rcr->getActive() == 1;
-        });
-        return $output;
-    }
-
-    /**
-     * @return Collection|Rcr[]
-     */
     public function getRcrsWithRecords(): Collection
     {
         $output = $this->rcrs->filter(function ($rcr) {
@@ -132,7 +121,6 @@ class Iln
         });
         return $output;
     }
-
 
     public function addRcr(Rcr $rcr): self
     {
@@ -165,18 +153,29 @@ class Iln
         });
     }
 
+    /**
+     * @return Collection|Rcr[]
+     */
+    public function getRcrs(): Collection
+    {
+        $output = $this->rcrs->filter(function ($rcr) {
+            return $rcr->getActive() == 1;
+        });
+        return $output;
+    }
+
     public function getNumberOfRecordsCorrected()
     {
-        return array_reduce($this->getRcrs()->getValues(), function ($total, $rcr) {
-            $total += $rcr->getNumberOfRecordsCorrected();
+        return array_reduce($this->getRcrs()->getValues(), function ($total, Rcr $rcr) {
+            $total += $rcr->getCountRecordsByStatus(record::RECORD_VALIDATED);
             return $total;
         });
     }
 
     public function getNumberOfRecordsHandled()
     {
-        return array_reduce($this->getRcrs()->getValues(), function ($total, $rcr) {
-            $total += $rcr->getNumberOfRecordsHandled();
+        return array_reduce($this->getRcrs()->getValues(), function ($total, Rcr $rcr) {
+            $total += $rcr->getCountRecordsByStatus(Record::RECORD_SKIPPED) + $rcr->getCountRecordsByStatus(Record::RECORD_VALIDATED);
             return $total;
         });
     }

@@ -112,7 +112,7 @@ class RecordRepository extends ServiceEntityRepository
 
     public function countCorrectedForRcr(Rcr $rcr)
     {
-        return $this->countByStatusForRcr($rcr, Record::RECORD_VALIDATED) + $this->countByStatusForRcr($rcr, Record::RECORD_FIXED_OUTSIDE);
+        return $this->countByStatusForRcr($rcr, Record::RECORD_VALIDATED);
     }
 
     public function countRepriseForRcrs()

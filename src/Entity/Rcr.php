@@ -46,16 +46,6 @@ class Rcr
     private $records;
 
     /**
-     * @ORM\Column(type="integer", nullable=true, options={"default": 0})
-     */
-    private $numberOfRecords;
-
-    /**
-     * @ORM\Column(type="integer", nullable=true, options={"default": 0})
-     */
-    private $numberOfRecordsCorrected;
-
-    /**
      * @ORM\Column(type="smallint")
      */
     private $harvested;
@@ -66,19 +56,29 @@ class Rcr
     private $active;
 
     /**
-     * @ORM\Column(type="integer", nullable=true, options={"default": 0})
-     */
-    private $numberOfRecordsReprise;
-
-    /**
      * @ORM\OneToMany(targetEntity="App\Entity\BatchImport", mappedBy="rcr")
      */
     private $batchImports;
 
     /**
-     * @ORM\Column(type="integer", nullable=true, options={"default": 0})
+     * @ORM\Column(type="integer", options={"default": 0})
      */
-    private $numberOfRecordsFixedOutside;
+    private $recordsStatus0;
+
+    /**
+     * @ORM\Column(type="integer", options={"default": 0})
+     */
+    private $recordsStatus1;
+
+    /**
+     * @ORM\Column(type="integer", options={"default": 0})
+     */
+    private $recordsStatus2;
+
+    /**
+     * @ORM\Column(type="integer", options={"default": 0})
+     */
+    private $recordsStatus3;
 
     public function __construct()
     {
@@ -89,6 +89,18 @@ class Rcr
     public function __toString()
     {
         return $this->getLabel();
+    }
+
+    public function getLabel(): ?string
+    {
+        return $this->label;
+    }
+
+    public function setLabel(string $label): self
+    {
+        $this->label = $label;
+
+        return $this;
     }
 
     public function getId(): ?int
@@ -104,18 +116,6 @@ class Rcr
     public function setCode(string $code): self
     {
         $this->code = $code;
-
-        return $this;
-    }
-
-    public function getLabel(): ?string
-    {
-        return $this->label;
-    }
-
-    public function setLabel(string $label): self
-    {
-        $this->label = $label;
 
         return $this;
     }
@@ -177,44 +177,114 @@ class Rcr
 
     public function getNumberOfRecords(): ?int
     {
-        if (is_null($this->numberOfRecords)) {
-            return 0;
-        }
-        return $this->numberOfRecords;
+        return $this->getRecordsStatus0() + $this->getRecordsStatus1() + $this->getRecordsStatus2() + $this->getRecordsStatus3();
     }
 
-    public function setNumberOfRecords(?int $numberOfRecords): self
+    public function getRecordsStatus0(): ?int
     {
-        $this->numberOfRecords = $numberOfRecords;
+        return $this->recordsStatus0;
+    }
+
+    public function setRecordsStatus0(int $recordsStatus0): self
+    {
+        $this->recordsStatus0 = $recordsStatus0;
 
         return $this;
     }
 
-    public function getNumberOfRecordsCorrected(): ?int
+    public function getRecordsStatus1(): ?int
     {
-        if (is_null($this->numberOfRecordsCorrected)) {
-            return 0;
-        }
-        return $this->numberOfRecordsCorrected;
+        return $this->recordsStatus1;
     }
 
-    public function setNumberOfRecordsCorrected(?int $numberOfRecordsCorrected): self
+    public function setRecordsStatus1(int $recordsStatus1): self
     {
-        $this->numberOfRecordsCorrected = $numberOfRecordsCorrected;
+        $this->recordsStatus1 = $recordsStatus1;
 
         return $this;
     }
 
-    public function getNumberOfRecordsAvailable(): ?int
+    public function getRecordsStatus2(): ?int
     {
-        return ($this->getNumberOfRecords() - $this->getNumberOfRecordsCorrected() - $this->getNumberOfRecordsReprise());
+        return $this->recordsStatus2;
     }
 
-    public function getNumberOfRecordsHandled(): ?int
+    public function setRecordsStatus2(int $recordsStatus2): self
     {
-        return ($this->getNumberOfRecordsCorrected() + $this->getNumberOfRecordsReprise());
+        $this->recordsStatus2 = $recordsStatus2;
+
+        return $this;
     }
 
+    public function getRecordsStatus3(): ?int
+    {
+        return $this->recordsStatus3;
+    }
+
+    public function setRecordsStatus3(int $recordsStatus3): self
+    {
+        $this->recordsStatus3 = $recordsStatus3;
+
+        return $this;
+    }
+
+    public function getNumberOfRecordsAvailable(): int
+    {
+        return $this->getCountRecordsByStatus(Record::RECORD_TODO);
+    }
+
+    public function getCountRecordsByStatus(int $status)
+    {
+        switch ($status) {
+            case Record::RECORD_TODO:
+                return $this->getRecordsStatus0();
+            case Record::RECORD_VALIDATED:
+                return $this->getRecordsStatus1();
+            case Record::RECORD_SKIPPED:
+                return $this->getRecordsStatus2();
+            case Record::RECORD_FIXED_OUTSIDE:
+                return $this->getRecordsStatus3();
+        }
+        return 0;
+    }
+
+    public function getNumberOfRecordsReprise(): int
+    {
+        return $this->getCountRecordsByStatus(Record::RECORD_SKIPPED);
+    }
+
+    public function getNumberOfRecordsFixedOutside(): int
+    {
+        return $this->getCountRecordsByStatus(Record::RECORD_FIXED_OUTSIDE);
+    }
+
+    public function setNumberOfRecordsCorrected(int $value): void
+    {
+        $this->setCountRecordsByStatus(Record::RECORD_VALIDATED, $value);
+    }
+
+    public function setNumberOfRecordsReprise(int $value): void
+    {
+        $this->setCountRecordsByStatus(Record::RECORD_SKIPPED, $value);
+    }
+
+    public function setCountRecordsByStatus(int $status, int $value): void
+    {
+        switch ($status) {
+            case Record::RECORD_TODO:
+                $this->setRecordsStatus0($value);
+                return;
+            case Record::RECORD_VALIDATED:
+                $this->setRecordsStatus1($value);
+                return;
+            case Record::RECORD_SKIPPED:
+                $this->setRecordsStatus2($value);
+                return;
+            case Record::RECORD_FIXED_OUTSIDE:
+                $this->setRecordsStatus3($value);
+                return;
+        }
+    }
 
     public function getHarvested(): ?int
     {
@@ -240,29 +310,6 @@ class Rcr
         return $this;
     }
 
-    public function getNumberOfRecordsReprise(): ?int
-    {
-        if (is_null($this->numberOfRecordsReprise)) {
-            return 0;
-        }
-        return $this->numberOfRecordsReprise;
-    }
-
-    public function setNumberOfRecordsReprise(?int $numberOfRecordsReprise): self
-    {
-        $this->numberOfRecordsReprise = $numberOfRecordsReprise;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|BatchImport[]
-     */
-    public function getBatchImports(): Collection
-    {
-        return $this->batchImports;
-    }
-
     public function addBatchImport(BatchImport $batchImport): self
     {
         if (!$this->batchImports->contains($batchImport)) {
@@ -273,13 +320,22 @@ class Rcr
         return $this;
     }
 
-    public function hasBatchRun(int $batchType) {
+    public function hasBatchRun(int $batchType)
+    {
         foreach ($this->getBatchImports() as $batchImport) {
             if ($batchImport->getType() == $batchType) {
                 return $batchImport;
             }
         }
         return false;
+    }
+
+    /**
+     * @return Collection|BatchImport[]
+     */
+    public function getBatchImports(): Collection
+    {
+        return $this->batchImports;
     }
 
     public function removeBatchImport(BatchImport $batchImport): self
@@ -291,18 +347,6 @@ class Rcr
                 $batchImport->setRcr(null);
             }
         }
-
-        return $this;
-    }
-
-    public function getNumberOfRecordsFixedOutside(): ?int
-    {
-        return $this->numberOfRecordsFixedOutside;
-    }
-
-    public function setNumberOfRecordsFixedOutside(int $numberOfRecordsFixedOutside): self
-    {
-        $this->numberOfRecordsFixedOutside = $numberOfRecordsFixedOutside;
 
         return $this;
     }
