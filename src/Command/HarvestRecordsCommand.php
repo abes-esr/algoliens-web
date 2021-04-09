@@ -169,7 +169,6 @@ class HarvestRecordsCommand extends Command
     {
         $this->runBatch($rcr, BatchImport::TYPE_RCR_CREA);
         $this->runBatch($rcr, BatchImport::TYPE_UNICA);
-        $this->em->getRepository(Rcr::class)->updateStats($rcr);
         $this->em->clear();
     }
 
@@ -192,8 +191,6 @@ class HarvestRecordsCommand extends Command
                 $batch->setEndDate(null);
 
                 $this->wsHarvester->runNewBatchAlreadyCreated($batch, $this->logger);
-                $this->em->getRepository(Rcr::class)->updateStats($batch->getRcr());
-
                 $batch = $rcr->hasBatchRun($batchType);
                 $end = microtime(true);
 

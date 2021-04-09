@@ -195,7 +195,7 @@ class WsHarvester
         $this->em->persist($this->batchImport);
         $this->em->flush();
 
-        $this->em->getRepository(Rcr::class)->updateStats($this->batchImport->getRcr());
+        $this->em->getRepository(Rcr::class)->updateStatsForRcr($this->batchImport->getRcr());
         $this->em->persist($this->batchImport->getRcr());
         $this->batchImport->updateCountErrors();
         $this->em->persist($this->batchImport);

@@ -87,10 +87,7 @@ class AdminController extends AbstractController
             // Launch the job
             $wsHarvester = new WsHarvester($em);
             $wsHarvester->runNewBatchAlreadyCreated($batchImport, $logger);
-            $em->getRepository(Rcr::class)->updateStats($batchImport->getRcr());
-
-            $logger->debug("G : " . $batchImport->getStartDate()->format("Y-m-d H:i:s"));
-
+            $em->getRepository(Rcr::class)->updateStatsForRcr($batchImport->getRcr());
         });
         return $this->redirect($this->generateUrl("admin_rcr", ["ilnCode" => $rcr->getIln()->getCode(), "rcrCode" => $rcr->getCode()]));
     }
@@ -104,7 +101,7 @@ class AdminController extends AbstractController
         if ($confirm == "confirm") {
             if ($action == "deleterecords") {
                 $this->getDoctrine()->getRepository(Record::class)->deleteForBatch($batchImport);
-                $this->getDoctrine()->getRepository(Rcr::class)->updateStats($batchImport->getRcr());
+                $this->getDoctrine()->getRepository(Rcr::class)->updateStatsForRcr($batchImport->getRcr());
 
                 $batchImport->setStatus(BatchImport::STATUS_CANCEL);
                 $em->persist($batchImport);
@@ -171,7 +168,7 @@ class AdminController extends AbstractController
         $count = 0;
         /** @var Rcr $rcr */
         foreach ($rcrs as $rcr) {
-            $updated = $em->getRepository(Rcr::class)->updateStats($rcr);
+            $updated = $em->getRepository(Rcr::class)->updateStatsForRcr($rcr);
             if ($updated != 0) {
                 $count++;
             }
