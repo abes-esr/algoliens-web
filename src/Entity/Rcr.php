@@ -180,6 +180,12 @@ class Rcr
         return $this->getRecordsStatus0() + $this->getRecordsStatus1() + $this->getRecordsStatus2() + $this->getRecordsStatus3();
     }
 
+    public function getNumberOfRecordsCorrected(): ?int
+    {
+        return $this->getCountRecordsByStatus(Record::RECORD_VALIDATED);
+    }
+
+
     public function getRecordsStatus0(): ?int
     {
         return $this->recordsStatus0;
