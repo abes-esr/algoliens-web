@@ -137,7 +137,8 @@ class RecordController extends AbstractController
             "record" => $record,
             "empty" => null,
             "langCode" => $lang,
-            "langLabel" => $abesLanguages->getLabelForCode($lang)
+            "langLabel" => $abesLanguages->getLabelForCode($lang),
+            "rcr" => $record->getRcrCreate()
         ];
 
         return $this->viewRecord($record, $iln, $em, $request, $redirectResponse, $responseTemplate, $responseParams);
