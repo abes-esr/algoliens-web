@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use DateTime;
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -201,26 +203,26 @@ class Record
         return $this;
     }
 
-    public function getLastUpdate(): ?\DateTimeInterface
+    public function getLastUpdate(): ?DateTimeInterface
     {
         return $this->lastUpdate;
     }
 
-    public function setLastUpdate(\DateTimeInterface $lastUpdate): self
+    public function setLastUpdate(DateTimeInterface $lastUpdate): self
     {
         $this->lastUpdate = $lastUpdate;
 
         return $this;
     }
 
-    public function getLocked(): ?\DateTimeInterface
+    public function getLocked(): ?DateTimeInterface
     {
         return $this->locked;
     }
 
-    public function setLocked(\DateTimeInterface $lastUpdate = null): self
+    public function setLocked(DateTimeInterface $lastUpdate = null): self
     {
-        $endOfLock = new \DateTime();
+        $endOfLock = new DateTime();
         $endOfLock = $endOfLock->modify("+1 hour");
         $this->locked = $endOfLock;
 
@@ -340,7 +342,7 @@ class Record
      * @ORM\PreUpdate()
      */
     public function setUpdatedAt() {
-        $this->updatedAt = new \DateTime();
+        $this->updatedAt = new DateTime();
     }
 
     public function getSkipReason(): ?SkipReason
@@ -372,6 +374,7 @@ class Record
         if ($this->getMarcBefore() == "Notice absente du sudoc public") {
             return "zzz";
         }
+
         $lines = preg_split("/\n/", $this->getMarcBefore());
         foreach ($lines as $line) {
             if (preg_match("/^101/", $line)) {
@@ -381,5 +384,8 @@ class Record
                 }
             }
         }
+
+        # Si l'on n'a pas trouvé de 101 on renvoie zzz
+        return "zzz";
     }
 }

@@ -175,6 +175,16 @@ class RecordRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function findMissingLangForIln(Iln $iln)
+    {
+        return $this->createQueryBuilder('l')
+            ->join("l.rcrCreate", "r")
+            ->where("r.iln = :iln and l.lang is null and l.status = 0")
+            ->setParameter('iln', $iln)
+            ->getQuery()
+            ->getResult();
+    }
+
     public function getLangsForIln(Iln $iln)
     {
         return $this->createQueryBuilder('rec')
