@@ -84,6 +84,11 @@ class Rcr
     {
         $this->records = new ArrayCollection();
         $this->batchImports = new ArrayCollection();
+
+        $this->recordsStatus0 = 0;
+        $this->recordsStatus1 = 0;
+        $this->recordsStatus2 = 0;
+        $this->recordsStatus3 = 0;
     }
 
     public function __toString()
