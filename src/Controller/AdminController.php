@@ -19,6 +19,7 @@ use Symfony\Contracts\EventDispatcher\Event;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
  * @Route("/admin")
@@ -125,11 +126,11 @@ class AdminController extends AbstractController
      * @Route("/iln/{ilnCode}/import-rcr", name="admin_iln_populate_rcr")
      * @Entity("iln", expr="repository.findOneBy({'code': ilnCode})")
      */
-    public function ilnPopulateWithRcr(Iln $iln, EntityManagerInterface $em, Request $request)
+    public function ilnPopulateWithRcr(Iln $iln, EntityManagerInterface $em, Request $request, HttpClientInterface $client)
     {
         $urlWs = "https://www.idref.fr/services/iln2rcr/" . $iln->getNumber() . "&format=text/json";
-        $rcrJson = file_get_contents($urlWs);
-        $rcrArray = json_decode($rcrJson);
+        $response = $client->request("GET", $urlWs);
+        $rcrArray = json_decode($response->getContent());
 
         $count = 0;
         foreach ($rcrArray->sudoc->query->result as $rcrDescription) {
