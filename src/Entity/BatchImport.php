@@ -16,6 +16,7 @@ class BatchImport
     const TYPE_RCR_CREA = 1;
     const TYPE_UNICA = 2;
 
+    const STATUS_NEW = 0;
     const STATUS_RUNNING = 1;
     const STATUS_FINISHED = 2;
     const STATUS_ERROR = 3;

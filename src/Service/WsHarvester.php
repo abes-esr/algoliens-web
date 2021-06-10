@@ -210,6 +210,9 @@ class WsHarvester
     {
         $batchImport = new BatchImport($rcr, $batchType);
         $batchImport->setType($batchType);
+        $batchImport->setStatus(BatchImport::STATUS_NEW);
+        $this->em->persist($batchImport);
+        $this->em->flush();
         return $this->runNewBatchAlreadyCreated($batchImport, null, $content);
     }
 
