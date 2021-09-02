@@ -26,6 +26,9 @@
     "doctrine/dbal": {
         "version": "2.10.2"
     },
+    "doctrine/deprecations": {
+        "version": "v0.5.3"
+    },
     "doctrine/doctrine-bundle": {
         "version": "2.0",
         "recipe": {
@@ -223,9 +226,6 @@
             "config/packages/dev/debug.yaml"
         ]
     },
-    "symfony/debug-pack": {
-        "version": "v1.0.8"
-    },
     "symfony/dependency-injection": {
         "version": "v5.0.10"
     },
@@ -336,8 +336,8 @@
     "symfony/options-resolver": {
         "version": "v5.0.10"
     },
-    "symfony/orm-pack": {
-        "version": "v1.0.8"
+    "symfony/password-hasher": {
+        "version": "v5.3.7"
     },
     "symfony/polyfill-intl-grapheme": {
         "version": "v1.22.1"
@@ -362,9 +362,6 @@
     },
     "symfony/process": {
         "version": "v5.0.10"
-    },
-    "symfony/profiler-pack": {
-        "version": "v1.0.4"
     },
     "symfony/property-access": {
         "version": "v5.0.10"
