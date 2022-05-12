@@ -1,0 +1,41 @@
+version: '2'
+
+services:
+    web:
+        build: docker/php
+        ports:
+            - "8020:80"
+        volumes:
+            - ./:/var/www/html
+            - ./docker/sites:/etc/apache2/sites-enabled
+        links:
+            - db:db
+
+    db:
+        image: mysql:5.6
+        volumes:
+            - ./var/mysql:/var/lib/mysql
+        ports:
+            - "3306:3306"
+        environment:
+            - MYSQL_ROOT_PASSWORD=root
+
+    myadmin:
+        image: phpmyadmin/phpmyadmin
+        ports:
+            - "9020:80"
+        links:
+            - db:db
+        environment:
+            - UPLOAD_LIMIT=256M
+
+    node:
+        build: docker/node
+        volumes:
+            - .:/project
+        working_dir: /project
+        user: 1000:1000 # Dans la plupart des cas, adaptez au besoin
+        command: "yarn encore dev --watch"
+        ports:
+            - 8089:8089 # Port pour webpack
+            - 3000:3000 # Port pour BrowserSync

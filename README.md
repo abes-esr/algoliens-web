@@ -109,3 +109,10 @@ Les options présentes dans cette table seront présentées sous la forme d'une 
 # Historique
 
 La version initiale du projet a été développée par Sylvain Machefert au sein de l'université Bordeaux Montaigne durant la période de confinement du printemps 2020. Le code source est mis à disposition selon les termes de la licence GNU GPL v3.
+
+# Docker
+Ce répertoire contient les éléments dockers pour lancer le serveur avec la commande suivante : 
+
+```
+docker-compose up
+```
