@@ -101,7 +101,13 @@ class HarvestRecordsCommand extends Command
                 default:
                     dd("Erreur de type de batch");
             }
-            $this->wsHarvester->runNewBatch($rcr, $batchTypeValue, $content);
+            # On va lancer le traitement en le créant s'il n'en existe pas, ou en relançant sur un précédent sinon
+            $batch = $this->em->getRepository(BatchImport::class)->findOneBy(["rcr" => $rcr, "type" => $batchTypeValue]);
+            if ($batch) {
+                $this->wsHarvester->runNewBatchAlreadyCreated($batch, $this->logger, $content);
+            } else {
+                $this->wsHarvester->runNewBatch($rcr, $batchTypeValue, $content);
+            }
         } else {
             $ilnNumber = $this->input->getOption('iln');
             if (!$ilnNumber) {
