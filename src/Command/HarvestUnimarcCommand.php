@@ -19,9 +19,10 @@ class HarvestUnimarcCommand extends Command
     private $em;
     private $wsHarvester;
 
-    public function __construct(string $name = null, EntityManagerInterface $em, WsHarvester $ws)
+    public function __construct(EntityManagerInterface $em, WsHarvester $ws)
     {
-        parent::__construct($name);
+        parent::__construct();
+
         $this->em = $em;
         $this->wsHarvester = $ws;
     }

@@ -34,9 +34,9 @@ class HarvestRecordsCommand extends Command
     private $output;
     private $logger;
 
-    public function __construct(string $name = null, EntityManagerInterface $em, WsHarvester $wsHarvester, LoggerInterface $logger)
+    public function __construct(EntityManagerInterface $em, WsHarvester $wsHarvester, LoggerInterface $logger)
     {
-        parent::__construct($name);
+        parent::__construct();
         $this->em = $em;
         $this->wsHarvester = $wsHarvester;
         $this->logger = $logger;

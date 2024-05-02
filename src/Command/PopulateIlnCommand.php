@@ -19,9 +19,10 @@ class PopulateIlnCommand extends Command
 
     private $em;
 
-    public function __construct(string $name = null, EntityManagerInterface $em)
+    public function __construct(EntityManagerInterface $em)
     {
-        parent::__construct($name);
+        parent::__construct();
+
         $this->em = $em;
     }
 
