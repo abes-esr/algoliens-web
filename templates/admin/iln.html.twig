@@ -6,7 +6,9 @@
 <div class="example-wrapper">
     {% include "admin/_breadcrumb.html.twig" %}
     <h1>Admin</h1>
+    <p class="alert alert-info">Si de nouveaux RCR ont été ajoutés à cet ILN depuis le chargement initial, il est possible de <a href="{{ url("admin_iln_populate_rcr", {"ilnCode": iln.code}) }}">les importer</a>.</p>
     <h2>Liste des RCR</h2>
+
         {% if iln.rcrs | length == 0 %}
             <p>Aucun RCR disponible</p>
             <a href="{{ url("admin_iln_populate_rcr", {ilnCode: iln.code}) }}" class="btn btn-primary">Charger les RCR</a>

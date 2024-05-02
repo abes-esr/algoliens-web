@@ -132,9 +132,10 @@ class AdminController extends AbstractController
         $response = $client->request("GET", $urlWs);
         $rcrArray = json_decode($response->getContent());
 
+        $rcrRepository = $em->getRepository(Rcr::class);
+
         $count = 0;
         foreach ($rcrArray->sudoc->query->result as $rcrDescription) {
-            $rcr = new Rcr();
             $library = null;
             if (!isset($rcrDescription->library)) {
                 // Dans le cas d'un RCR unique pour un ILN, on n'a plus la même structure
@@ -143,21 +144,27 @@ class AdminController extends AbstractController
             } else {
                 $library = $rcrDescription->library;
             }
-            $rcr->setCode($library->rcr);
-            $rcr->setLabel($library->shortname);
-            $rcr->setUpdated(new DateTime());
-            $rcr->setIln($iln);
-            $rcr->setHarvested(0);
-            $rcr->setActive(1);
-            $em->persist($rcr);
-            $count++;
+
+            $rcr = $rcrRepository->findOneBy(["code" => $library->rcr]);
+            if (!$rcr) {
+                $rcr = new Rcr();
+
+                $rcr->setCode($library->rcr);
+                $rcr->setLabel($library->shortname);
+                $rcr->setUpdated(new DateTime());
+                $rcr->setIln($iln);
+                $rcr->setHarvested(0);
+                $rcr->setActive(1);
+                $em->persist($rcr);
+                $count++;
+            }
         }
         $em->flush();
 
         $session = $request->getSession();
         $session->getFlashBag()->add('success', $count . " RCR ajoutés.");
 
-        return $this->redirect($this->generateUrl("admin"));
+        return $this->redirect($this->generateUrl("admin_iln", ["code" => $iln->getCode()]));
     }
 
     /**
@@ -166,13 +173,10 @@ class AdminController extends AbstractController
     public function fixReprises(EntityManagerInterface $em, Request $request)
     {
         $rcrs = $em->getRepository(Rcr::class)->findAll();
-        $count = 0;
+
         /** @var Rcr $rcr */
         foreach ($rcrs as $rcr) {
-            $updated = $em->getRepository(Rcr::class)->updateStatsForRcr($rcr);
-            if ($updated != 0) {
-                $count++;
-            }
+            $em->getRepository(Rcr::class)->updateStatsForRcr($rcr);
         }
 
 //        $reprisesForIln = $em->getRepository(Record::class)->countRepriseForRcrs();
@@ -187,7 +191,7 @@ class AdminController extends AbstractController
 //        }
         $em->flush();
         $session = $request->getSession();
-        $session->getFlashBag()->add('success', $count . " RCR corrigé(s).");
+        $session->getFlashBag()->add('success', "RCR corrigé(s).");
 
         return $this->redirect(
             $this->generateUrl("admin")
