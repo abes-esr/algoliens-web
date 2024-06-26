@@ -189,6 +189,7 @@ class WsHarvester
         if (is_null($content)) {
             $content = $this->getApiContent();
         }
+        $this->em->getRepository(Record::class)->deactivateForBatch($this->batchImport);
         $this->processContent($content);
         $this->batchImport->setEndDate(new DateTime());
         $this->batchImport->setStatus(BatchImport::STATUS_FINISHED);

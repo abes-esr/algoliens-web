@@ -190,7 +190,7 @@ class HarvestRecordsCommand extends Command
         if ($batch) {
             if ($this->input->getOption("refresh")) {
                 $start = microtime(true);
-                $this->io->writeln("BEFOR : ".$batch->getCountRecords()." records / ".$batch->getCountErrors()." errors");
+                $this->io->writeln("BEFORE : ".$batch->getCountRecords()." records / ".$batch->getCountErrors()." errors");
                 $this->em->getRepository(Record::class)->deactivateForBatch($batch);
                 $batch->setStatus(BatchImport::STATUS_RUNNING);
                 $batch->setStartDate(new DateTime());

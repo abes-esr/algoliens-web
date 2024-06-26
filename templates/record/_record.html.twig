@@ -3,14 +3,6 @@
         <h2 id="record_title">
             Notice {{ record.ppn }}{% if record.title != '' %} - {{ record.title }} ({{ record.year }}){% endif %}</h2>
         <div id="unloca"></div>
-        {% if record.comment != "" %}
-            <div class="alert alert-warning">
-                Cette notice a déjà été proposé à un·e collègue qui l'a passée avec le commentaire suivant :
-                <br/>
-                <i>{{ record.comment }}</i>
-            </div>
-        {% endif %}
-
         {% if record.status != constant("App\\Entity\\Record::RECORD_TODO") %}
             <div class="alert alert-warning">
                 Cette notice a déjà le statut <strong>
@@ -25,28 +17,19 @@
                 <br/>
                 <i>{{ record.comment }}</i>
             </div>
+        {% elseif record.comment != "" %}
+            <div class="alert alert-warning">
+                Cette notice a déjà été proposé à un·e collègue qui l'a passée avec le commentaire suivant :
+                <br/>
+                <i>{{ record.comment }}</i>
+            </div>
         {% endif %}
 
         <p>Information sur le document : <span class="badge badge-info">{{ record.docTypeLabel }}</span>
             {% if record.batchImport %}<span
                     class="badge badge-primary">{{ record.batchImport.typeLabel }}</span>{% endif %}
         </p>
-        <p>
-            La notice n°<a target="_blank" href="http://www.sudoc.fr/{{ record.ppn }}">{{ record.ppn }}</a> vous
-            est proposée car
-            {% if record.batchImport %}
-                {% if record.batchImport.typeLabel == "UNICA" %}
-                    le RCR {{ record.rcrCreate.code }} est le seul établissement du réseau localisé dessus  et qu'
-                {% else %}
-                    le RCR {{ record.rcrCreate.code }} en est le créateur et qu'
-                {% endif %}
-            {% endif %}
-            elle comporte les erreurs suivantes :</p>
-        <ul>
-            {% for linkError in record.linkErrors %}
-                <li><strong>{{ linkError.errorCode }}</strong> : au moins {{ linkError.errorText }};</li>
-            {% endfor %}
-        </ul>
+
         <a href="#" id="btn_unimarc" class="btn btn-info">Afficher la notice unimarc</a>
         <div id="sudoc_record" class="collapse">
             {% if record.marcBefore != "" %}
@@ -60,77 +43,106 @@
                 </div>
             {% endif %}
         </div>
+
+        <br/>
+        <a href="#" data-qualimarc-url="{{ url("ajax_get_qualimarc", {ppn: record.ppn}) }}" data-ppn="{{ record.ppn }}" id="btn_qualimarc" class="btn btn-info">Afficher l'analyse Qualimarc</a>
+        <div id="qualimarc_result" class="collapse">
+            <img src="{{ asset("img/loader.gif") }}" alt="Chargement en cours"/>
+        </div>
+
+
+        {% if record.status != constant("App\\Entity\\Record::RECORD_VALIDATED") %}
+            <hr/>
+            <h2>Analyse algoliens</h2>
+            <p>
+                La notice n°<a target="_blank" href="http://www.sudoc.fr/{{ record.ppn }}">{{ record.ppn }}</a> vous
+                est proposée car
+                {% if record.batchImport %}
+                    {% if record.batchImport.typeLabel == "UNICA" %}
+                        le RCR {{ record.rcrCreate.code }} est le seul établissement du réseau localisé dessus  et qu'
+                    {% else %}
+                        le RCR {{ record.rcrCreate.code }} en est le créateur et qu'
+                    {% endif %}
+                {% endif %}
+                elle comporte les erreurs suivantes :</p>
+            <ul>
+                {% for linkError in record.linkErrors %}
+                    <li><strong>{{ linkError.errorCode }}</strong> : au moins {{ linkError.errorText }};</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
     </div>
 </div>
+{% if record.status != constant("App\\Entity\\Record::RECORD_VALIDATED") %}
+    <div class="row">
+        <div class="col-12">
+            <h2>Actions suggérées</h2>
 
-<div class="row">
-    <div class="col-12">
-        <h2>Actions suggérées</h2>
-
-        {% if app.session.get("winnie") %}
-            <p>Corriger la notice sur WinIBW</p>
-        {% endif %}
-        {% set countLinks = 0 %}
-        {% for linkError in record.linkErrors %}
-        {% if linkError.paprikaLinks|length > 0 %}
-        {% for paprikaLink in linkError.paprikaLinks %}
-        {% if countLinks == 0 %}
-        {% set countLinks = 1 %}
-        {% if app.session.get("winnie") %}
-            <strong>OU</strong><br/>
-        {% endif %}
-        Corriger les liens suivants à l'aide de Paprika :
-        <ul>
-
-
+            {% if app.session.get("winnie") %}
+                <p>Corriger la notice sur WinIBW</p>
             {% endif %}
-
-            <li>{{ paprikaLink.label }} &rarr; <a target="_blank" href="{{ paprikaLink.url }}">voir sur
-                    Paprika</a></li>
-
-            {% endfor %}
+            {% set countLinks = 0 %}
+            {% for linkError in record.linkErrors %}
+            {% if linkError.paprikaLinks|length > 0 %}
+            {% for paprikaLink in linkError.paprikaLinks %}
+            {% if countLinks == 0 %}
+            {% set countLinks = 1 %}
+            {% if app.session.get("winnie") %}
+                <strong>OU</strong><br/>
             {% endif %}
-            {% endfor %}
-            {% if countLinks == 1 %}
-        </ul>
-        {% endif %}
-        <p>Si vous ne souhaitez pas corriger cette notice maintenant mais souhaitez qu'elle soit à nouveau
-            proposée plus tard dans le cadre de chantier, vous pouvez la laisser de côté pour le moment :
-            <br/><a href="{% if permalink is defined %}
+            Corriger les liens suivants à l'aide de Paprika :
+            <ul>
+
+
+                {% endif %}
+
+                <li>{{ paprikaLink.label }} &rarr; <a target="_blank" href="{{ paprikaLink.url }}">voir sur
+                        Paprika</a></li>
+
+                {% endfor %}
+                {% endif %}
+                {% endfor %}
+                {% if countLinks == 1 %}
+            </ul>
+            {% endif %}
+            <p>Si vous ne souhaitez pas corriger cette notice maintenant mais souhaitez qu'elle soit à nouveau
+                proposée plus tard dans le cadre de chantier, vous pouvez la laisser de côté pour le moment :
+                <br/><a href="{% if permalink is defined %}
             {{ url("view_record_rcr", {'ilnCode': iln.code, 'ilnSecret': iln.secret, 'rcrCode': rcr.code}) }}
 {% else %}
 {{ app.request.uri }}
 {% endif %}" class="btn btn-outline-primary">Voir une autre notice</a>
-        <p><small>Si vous pensez que cette notice pourra être traitée directement par un collègue, envoyez-lui ce lien
-                direct avant de passer à une autre notice (clic-droit > copier l'adresse du lien) : <a
-                        href="{{ url("view_record_permalink", {ilnCode: iln.code, ilnSecret: iln.secret, rcrCode: rcr.code, idRecord: record.id, ppn: record.ppn}) }}">{{ url("view_record_permalink", {ilnCode: iln.code, ilnSecret: iln.secret, rcrCode: rcr.code, idRecord: record.id, ppn: record.ppn}) }}</a></small>
-        </p>
-        </p>
+            <p><small>Si vous pensez que cette notice pourra être traitée directement par un collègue, envoyez-lui ce
+                    lien
+                    direct avant de passer à une autre notice (clic-droit > copier l'adresse du lien) : <a
+                            href="{{ url("view_record_permalink", {ilnCode: iln.code, ilnSecret: iln.secret, rcrCode: rcr.code, idRecord: record.id, ppn: record.ppn}) }}">{{ url("view_record_permalink", {ilnCode: iln.code, ilnSecret: iln.secret, rcrCode: rcr.code, idRecord: record.id, ppn: record.ppn}) }}</a></small>
+            </p>
+        </div>
     </div>
-</div>
 
-<div class="row">
-    <div class="col-12">
-        <h2>Enregistrer</h2>
+    <div class="row">
+        <div class="col-12">
+            <h2>Enregistrer</h2>
+        </div>
     </div>
-</div>
-{{ form_start(form) }}
-<div class="row">
-    <div class="col-6 text-right">
-        <h3>Option 1 : notice corrigée</h3>
-        <p>La notice a été corrigée dans WinIBW ou Paprika, ne plus la proposer aux collègues.</p>
-        {{ form_widget(form.validate) }}
-    </div>
-    <div class="col-6 text-left" style="border-left:2px solid grey">
-        <h3>Option 2 : notice non traitée</h3>
+    {{ form_start(form) }}
+    <div class="row">
+        <div class="col-6 text-right">
+            <h3>Option 1 : notice corrigée</h3>
+            <p>La notice a été corrigée dans WinIBW ou Paprika, ne plus la proposer aux collègues.</p>
+            {{ form_widget(form.validate) }}
+        </div>
+        <div class="col-6 text-left" style="border-left:2px solid grey">
+            <h3>Option 2 : notice non traitée</h3>
 
-        {% if form.skipReason is defined %}
-            {{ form_row(form.skipReason) }}
-        {% else %}
-            <p>Cette notice n'a pas pu être traitée pour le moment. À reprendre document en main.</p>
-        {% endif %}
-        {{ form_row(form.comment) }}
-        {{ form_widget(form.skip) }}
+            {% if form.skipReason is defined %}
+                {{ form_row(form.skipReason) }}
+            {% else %}
+                <p>Cette notice n'a pas pu être traitée pour le moment. À reprendre document en main.</p>
+            {% endif %}
+            {{ form_row(form.comment) }}
+            {{ form_widget(form.skip) }}
+        </div>
     </div>
-</div>
-{{ form_end(form) }}
+    {{ form_end(form) }}
+{% endif %}

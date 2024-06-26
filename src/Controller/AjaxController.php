@@ -9,6 +9,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class AjaxController extends AbstractController
 {
@@ -64,5 +65,33 @@ class AjaxController extends AbstractController
         $response .= "<p>Si vous le souhaitez, vous pourrez trouver les coordonnées des correspondants catalogage de ces biblitohèques <a href='http://documentation.abes.fr/sudoc/Annuaire_Correspondants.htm'>sur le site de l'Abes</a>.</p>";
         $response .= "</div>";
         return new Response($response);
+    }
+
+
+    /**
+     * @Route("/ajax/qualimarc/{ppn}", name="ajax_get_qualimarc" )
+     */
+    public function getQualimarc(HttpClientInterface $client, string $ppn)
+    {
+        // {"ppnList":["044179375"],"typeAnalyse":"COMPLETE"}
+        $response = $client->request('POST',
+            'https://qualimarc.sudoc.fr/api/v1/check',
+            [
+                'json' => [
+                    'ppnList' => [$ppn],
+                    'typeAnalyse' => "COMPLETE"
+                ]
+            ]
+        );
+
+        $output = "";
+        if ($response->getStatusCode() == 200) {
+            $json = json_decode($response->getContent());
+            foreach ($json->resultRules[0]->detailerreurs as $error) {
+                $output .= "<strong>[".$error->priority."]</strong> ".$error->message . "<br>";
+            }
+        }
+
+        return new Response($output);
     }
 }

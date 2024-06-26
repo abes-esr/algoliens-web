@@ -31,4 +31,22 @@ $( document ).ready(function() {
         });
         return false;
     });
+
+    $("#btn_qualimarc").click(function () {
+        let ppn = $(this).attr("data-ppn");
+        let ajaxUrl = $(this).attr("data-qualimarc-url");
+
+        $("#qualimarc_result").slideToggle(500, function () {
+
+        });
+
+
+       $.ajax({
+            url: ajaxUrl,
+            type: 'GET',
+            success: function (response) {
+                $("#qualimarc_result").html(response);
+            }
+        });
+    });
 });
