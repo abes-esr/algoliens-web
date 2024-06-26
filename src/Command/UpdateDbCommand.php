@@ -12,6 +12,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class UpdateDbCommand extends Command
 {
     protected static $defaultName = 'app:update-db';
+    protected static $defaultDescription = 'mise à jour de différentes options de la base de données';
 
     private $em;
 
@@ -24,8 +25,6 @@ class UpdateDbCommand extends Command
 
     protected function configure()
     {
-        $this
-            ->setDescription('mise à jour de différentes options de la base de données');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -37,6 +36,6 @@ class UpdateDbCommand extends Command
         $this->em->getConnection()->executeQuery("UPDATE `record` set winnie = 0 where status = 0;");
         $this->em->getConnection()->executeQuery("UPDATE `record` set winnie = 1 where status = 0 and id in (select record_id from link_error where id not in (select link_error_id from paprika_link))");
         $io->success("Mise à jour terminée avec succès");
-        return 1;
+        return \Symfony\Component\Console\Command\Command::FAILURE;
     }
 }

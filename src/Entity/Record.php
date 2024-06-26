@@ -341,7 +341,7 @@ class Record
     /**
      * @ORM\PreUpdate()
      */
-    public function setUpdatedAt() {
+    public function setUpdatedAt(): void {
         $this->updatedAt = new DateTime();
     }
 

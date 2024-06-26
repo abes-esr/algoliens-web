@@ -16,6 +16,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class HarvestUnimarcCommand extends Command
 {
     protected static $defaultName = 'app:harvest-unimarc';
+    protected static $defaultDescription = 'Add a short description for your command';
     private $em;
     private $wsHarvester;
 
@@ -29,8 +30,6 @@ class HarvestUnimarcCommand extends Command
 
     protected function configure()
     {
-        $this
-            ->setDescription('Add a short description for your command');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -45,6 +44,6 @@ class HarvestUnimarcCommand extends Command
             $this->em->flush();
             $io->writeln("<info>" . $record->getPpn() . " mis à jour</info>");
         }
-        return 0;
+        return \Symfony\Component\Console\Command\Command::SUCCESS;
     }
 }

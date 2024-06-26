@@ -9,7 +9,6 @@ use Doctrine\Persistence\ManagerRegistry;
 /**
  * @method BatchImport|null find($id, $lockMode = null, $lockVersion = null)
  * @method BatchImport|null findOneBy(array $criteria, array $orderBy = null)
- * @method BatchImport[]    findAll()
  * @method BatchImport[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
 class BatchImportRepository extends ServiceEntityRepository
@@ -19,7 +18,7 @@ class BatchImportRepository extends ServiceEntityRepository
         parent::__construct($registry, BatchImport::class);
     }
 
-    public function findAll()
+    public function findAll(): array
     {
         return $this->findBy(array(),
             array(

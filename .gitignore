@@ -20,3 +20,7 @@ yarn-error.log
 composer.phar
 ws_files/
 public/batches/
+
+###> phpstan/phpstan ###
+phpstan.neon
+###< phpstan/phpstan ###

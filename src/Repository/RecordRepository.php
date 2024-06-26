@@ -70,7 +70,7 @@ class RecordRepository extends ServiceEntityRepository
         return $result;
     }
 
-    public function unlockRecords()
+    public function unlockRecords(): void
     {
         $em = $this->getEntityManager();
         $em->getConnection()->exec("UPDATE `record` set locked = null where locked is not null AND TIMEDIFF(now(), locked) > \"01:00:00\"");
@@ -143,7 +143,7 @@ class RecordRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function deleteForBatch(BatchImport $batchImport)
+    public function deleteForBatch(BatchImport $batchImport): void
     {
         $this->createQueryBuilder('l')
             ->delete()
@@ -153,7 +153,7 @@ class RecordRepository extends ServiceEntityRepository
             ->execute();
     }
 
-    public function deactivateForBatch(BatchImport $batchImport)
+    public function deactivateForBatch(BatchImport $batchImport): void
     {
         // On change le statut des notices concernées;
         $this->createQueryBuilder('r')

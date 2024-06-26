@@ -14,6 +14,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class FixLangCommand extends Command
 {
     protected static $defaultName = 'app:fix-lang';
+    protected static $defaultDescription = 'Cette fonction va identifier les notices pour lesquelles on peut trouver une langue';
 
     private $em;
     private $wsHarvester = null;
@@ -26,8 +27,6 @@ class FixLangCommand extends Command
 
     protected function configure()
     {
-        $this
-            ->setDescription('Cette fonction va identifier les notices pour lesquelles on peut trouver une langue');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -67,6 +66,6 @@ class FixLangCommand extends Command
 
         $io->success('You have a new command! Now make it your own! Pass --help to see your options.');
 
-        return 0;
+        return \Symfony\Component\Console\Command\Command::SUCCESS;
     }
 }

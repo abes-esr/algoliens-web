@@ -26,6 +26,7 @@ define("URL_RCR_CREA", 2);
 class HarvestRecordsCommand extends Command
 {
     protected static $defaultName = 'app:harvest-records';
+    protected static $defaultDescription = 'download all records';
 
     private $em;
     private $io;
@@ -48,7 +49,6 @@ class HarvestRecordsCommand extends Command
     protected function configure()
     {
         $this
-            ->setDescription('download all records')
             ->addOption('iln', null, InputOption::VALUE_REQUIRED, "Code de l'ILN")
             ->addOption('clean-database', null, InputOption::VALUE_NONE, "Nettoyage de la base de données avant import")
             ->addOption('rcr-from-file', null, InputOption::VALUE_REQUIRED, "Le code d'un RCR que l'on souhaite charger depuis un fichier")
@@ -136,7 +136,7 @@ class HarvestRecordsCommand extends Command
 
         $this->io->success('Harvesting terminé avec succès !');
 
-        return 0;
+        return \Symfony\Component\Console\Command\Command::SUCCESS;
     }
 
     protected function emptyDatabase()
@@ -171,14 +171,14 @@ class HarvestRecordsCommand extends Command
         return $filename;
     }
 
-    private function runBatches(Rcr $rcr)
+    private function runBatches(Rcr $rcr): void
     {
         $this->runBatch($rcr, BatchImport::TYPE_RCR_CREA);
         $this->runBatch($rcr, BatchImport::TYPE_UNICA);
         $this->em->clear();
     }
 
-    private function runBatch(Rcr $rcr, int $batchType)
+    private function runBatch(Rcr $rcr, int $batchType): void
     {
         if ($batchType == BatchImport::TYPE_UNICA) {
             $this->io->writeln("Récupération UNICA");
@@ -215,7 +215,7 @@ class HarvestRecordsCommand extends Command
         }
     }
 
-    private function displayBatchResult(BatchImport $batchImport)
+    private function displayBatchResult(BatchImport $batchImport): void
     {
         $this->io->writeln(sprintf("<info>Import terminé</info> : %s records / %s errors", $batchImport->getCountRecords(), $batchImport->getCountErrors()));
         $this->io->writeln("Durée : " . $batchImport->getDurationAsString());

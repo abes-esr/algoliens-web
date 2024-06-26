@@ -26,12 +26,12 @@ class WsHarvester
         $this->em = $em;
     }
 
-    private function storeContent($content)
+    private function storeContent($content): void
     {
         file_put_contents(dirname(__FILE__) . "/../../public/batches/" . $this->batchImport->getId() . ".txt", $content);
     }
 
-    private function processLine(array &$existingRecords, &$ppnPaprikaAlreadySet, $line)
+    private function processLine(array &$existingRecords, &$ppnPaprikaAlreadySet, $line): void
     {
         $error = preg_split("/\t/", $line);
         if (sizeof($error) > 1) {
@@ -112,7 +112,7 @@ class WsHarvester
         }
     }
 
-    private function processContent($content)
+    private function processContent($content): void
     {
 
         $lines = preg_split("/\n/", $content);

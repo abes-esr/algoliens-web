@@ -216,7 +216,7 @@ class BatchImport
         return $this;
     }
 
-    public function updateCountErrors()
+    public function updateCountErrors(): void
     {
         /** @var Record $record */
         $count = 0;

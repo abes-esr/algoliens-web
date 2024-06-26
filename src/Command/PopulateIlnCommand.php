@@ -16,6 +16,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class PopulateIlnCommand extends Command
 {
     protected static $defaultName = 'app:populate-iln';
+    protected static $defaultDescription = 'Based on an ILN NUMBER';
 
     private $em;
 
@@ -29,7 +30,6 @@ class PopulateIlnCommand extends Command
     protected function configure()
     {
         $this
-            ->setDescription('Based on an ILN NUMBER')
             ->addArgument('ilnNumber', InputArgument::OPTIONAL, "Code de l'iln au format numérique")
         ;
     }
@@ -72,6 +72,6 @@ class PopulateIlnCommand extends Command
 
         $io->success('Finish !');
 
-        return 0;
+        return \Symfony\Component\Console\Command\Command::SUCCESS;
     }
 }
